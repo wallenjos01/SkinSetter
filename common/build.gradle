@@ -1,0 +1,45 @@
+
+repositories {
+
+    maven {
+        url "https://libraries.minecraft.net/"
+    }
+
+}
+
+dependencies {
+
+    compileOnly('com.mojang:authlib:2.1.28')
+    compileOnly('com.google.code.gson:gson:2.8.0')
+
+    compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
+    compileOnly("me.m1dnightninja.midnightcore:common:1.0-latest")
+
+    compile project(":api")
+}
+
+artifacts {
+    jar
+    sourcesJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact(jar)
+            artifact(sourcesJar)
+        }
+    }
+
+    repositories {
+        maven {
+            if (project.hasProperty("pubUrl")) {
+                url = project.pubUrl as String
+                credentials {
+                    username project.pubUser as String
+                    password project.pubPass as String
+                }
+            }
+        }
+    }
+}

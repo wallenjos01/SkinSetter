@@ -1,0 +1,58 @@
+allprojects {
+    configurations {
+        compileClasspath
+    }
+}
+
+defaultTasks 'build'
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    project.ext.archiveName = "skinsetter"
+    project.ext.modid = "skinsetter"
+    project.ext.modclass = "SkinSetter"
+    project.ext.modname = "SkinSetter"
+    project.ext.minecraftVersion = "1.16.5"
+
+    project.ext.majorVersion = '1'
+    project.ext.minorVersion = '0'
+    project.ext.patchVersion = '0'
+
+    project.ext.apiVersion = project.ext.majorVersion + '.' + project.ext.minorVersion
+    project.ext.fullVersion = project.ext.apiVersion + '.' + project.ext.patchVersion
+
+
+    def release = false
+
+    group = "me.m1dnightninja.${project.ext.archiveName}"
+    version = release ? project.ext.fullVersion : "${project.ext.apiVersion}-latest"
+
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = "sources"
+        from sourceSets.main.allSource
+    }
+
+    jar {
+        from "LISENCE"
+    }
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+        maven { url 'https://mdmc.ddns.net/maven' }
+    }
+
+
+}

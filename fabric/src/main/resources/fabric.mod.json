@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "skinsetter",
+  "version": "${version}",
+  "name": "SkinSetter",
+  "description": "Change players' skins",
+  "authors": [
+    "M1dnight_Ninja"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/skinsetter/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "midnightcore:mod": [
+      "me.m1dnightninja.skinsetter.fabric.SkinSetter"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.10.6+build.214",
+    "fabric": "*",
+    "minecraft": "1.16.x",
+    "midnightcore": "1.0.x"
+  }
+}

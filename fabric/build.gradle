@@ -1,0 +1,109 @@
+import net.fabricmc.loom.task.RemapJarTask
+
+plugins {
+    id 'fabric-loom' version '0.6-SNAPSHOT'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+}
+
+repositories {
+    maven { url 'https://maven.fabricmc.net/' }
+}
+
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+dependencies {
+
+    minecraft("com.mojang:minecraft:${project.ext.minecraftVersion}")
+    mappings(minecraft.officialMojangMappings())
+    modImplementation("net.fabricmc:fabric-loader:0.11.3")
+
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.32.5+1.16")
+    modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
+
+    modImplementation("me.m1dnightninja.midnightcore:api:1.0-latest")
+    modImplementation("me.m1dnightninja.midnightcore:common:1.0-latest")
+    modImplementation("me.m1dnightninja.midnightcore:fabric:1.0-latest") {
+        transitive = false
+    }
+
+    shade project(':api')
+    shade project(':common')
+
+}
+
+processResources {
+
+    Map<String, ?> ex = new HashMap<>()
+    ex.put("version", project.ext.fullVersion)
+    ex.put("modid", project.ext.modid)
+    ex.put("modname", project.ext.modname)
+    ex.put("modclass", project.ext.modclass)
+
+    from(sourceSets.main.resources.srcDirs) {
+        include("fabric.mod.json")
+        expand(ex)
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "fabric.mod.json"
+    }
+}
+
+shadowJar {
+
+    setArchivesBaseName("${project.ext.archiveName}-fabric-dev")
+    configurations = [project.configurations.shade]
+
+    dependencies {
+        exclude('net.fabricmc:.*')
+        include(project(':api'))
+        include(project(':common'))
+
+        exclude '/mappings/*'
+    }
+}
+
+task remapShadowJar(type: RemapJarTask) {
+
+    archiveBaseName.set("${project.ext.archiveName}-fabric-mc${project.ext.minecraftVersion}")
+
+    dependsOn(tasks.shadowJar)
+    input = tasks.shadowJar.getArchivePath()
+    addNestedDependencies = true
+
+}
+
+tasks.assemble.dependsOn tasks.remapShadowJar
+
+artifacts {
+    archives remapShadowJar
+    shadow sourcesJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact(jar) {
+                builtBy remapJar
+            }
+            artifact(sourcesJar) {
+                builtBy remapSourcesJar
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            if (project.hasProperty("pubUrl")) {
+                url = project.pubUrl as String
+                credentials {
+                    username project.pubUser as String
+                    password project.pubPass as String
+                }
+            }
+        }
+    }
+}

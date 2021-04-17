@@ -1,0 +1,32 @@
+artifacts {
+    jar
+    sourcesJar
+}
+
+dependencies {
+
+    compileOnly("me.m1dnightninja.hideandseek:api:1.0-latest")
+    compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
+
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact(jar)
+            artifact(sourcesJar)
+        }
+    }
+
+    repositories {
+        maven {
+            if (project.hasProperty("pubUrl")) {
+                url = project.pubUrl as String
+                credentials {
+                    username project.pubUser as String
+                    password project.pubPass as String
+                }
+            }
+        }
+    }
+}
