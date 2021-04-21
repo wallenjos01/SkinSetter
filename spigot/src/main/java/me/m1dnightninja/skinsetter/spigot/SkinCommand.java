@@ -1,6 +1,6 @@
 package me.m1dnightninja.skinsetter.spigot;
 
-import me.m1dnightninja.midnightcore.api.skin.Skin;
+import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

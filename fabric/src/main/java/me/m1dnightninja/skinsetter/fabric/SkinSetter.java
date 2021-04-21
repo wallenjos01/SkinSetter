@@ -1,6 +1,8 @@
 package me.m1dnightninja.skinsetter.fabric;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
+import me.m1dnightninja.midnightcore.api.config.ConfigSection;
+import me.m1dnightninja.midnightcore.common.JsonConfigProvider;
 import me.m1dnightninja.midnightcore.fabric.Logger;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
 import me.m1dnightninja.midnightcore.fabric.api.MidnightCoreModInitializer;
@@ -29,11 +31,13 @@ public class SkinSetter implements MidnightCoreModInitializer {
         Logger log = new Logger(LogManager.getLogger());
 
         if(!MidnightCoreAPI.getInstance().areAllModulesLoaded("midnightcore:skin", "midnightcore:lang")) {
-            log.warn("Unable to enable SkinSetter, one or more required MidnightCore modules are missing!");
-            return;
+
+            throw new IllegalStateException("Unable to enable SkinSetter, one or more required MidnightCore modules are missing!");
         }
 
-        new SkinSetterAPI(log, u -> MidnightCore.getServer().getPlayerList().getPlayer(u) != null, configFolder);
+        ConfigSection sec = new JsonConfigProvider().loadFromStream(getClass().getResourceAsStream("/assets/skinsetter/lang/en_us.json"));
+
+        new SkinSetterAPI(log, u -> MidnightCore.getServer().getPlayerList().getPlayer(u) != null, configFolder, sec);
 
         CommandRegistrationCallback.EVENT.register(((commandDispatcher, b) -> new SkinCommand().register(commandDispatcher)));
 

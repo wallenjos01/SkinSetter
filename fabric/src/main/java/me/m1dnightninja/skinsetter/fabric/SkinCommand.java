@@ -3,22 +3,25 @@ package me.m1dnightninja.skinsetter.fabric;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import me.m1dnightninja.midnightcore.api.skin.Skin;
+import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
 import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
+import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
+import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.ChatType;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
+import java.util.UUID;
 
 public class SkinCommand {
 
@@ -64,8 +67,6 @@ public class SkinCommand {
         return st.hasPermission(2) || PermissionHelper.check(st, perm);
     }
 
-    private static final Style SUCCESS = Style.EMPTY.withColor(ChatFormatting.GREEN);
-
     private int executeSet(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin) {
 
         Skin s = util.getSavedSkin(skin);
@@ -77,7 +78,7 @@ public class SkinCommand {
             util.setSkin(ent.getUUID(), s);
         }
 
-        context.getSource().sendSuccess(new TextComponent("Changed the skin of " + players.size() + " players").setStyle(SUCCESS), false);
+        sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", players.size(), players.get(0));
 
         return players.size();
     }
@@ -86,7 +87,7 @@ public class SkinCommand {
 
         util.getSkinOnline(skin, (uid, skin1) -> {
             if(skin1 == null) {
-                context.getSource().sendFailure(new TextComponent("That is not a valid skin!"));
+                sendFeedback(context, "command.set.error");
                 return;
             }
 
@@ -95,7 +96,7 @@ public class SkinCommand {
                     util.setSkin(ent.getUUID(), skin1);
                 }
 
-                context.getSource().sendSuccess(new TextComponent("Changed the skin of " + players.size() + " players").setStyle(SUCCESS), false);
+                sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", players.size(), players.get(0));
             });
         });
 
@@ -108,7 +109,7 @@ public class SkinCommand {
             util.resetSkin(ent.getUUID());
         }
 
-        context.getSource().sendSuccess(new TextComponent("Reset the skin of " + players.size() + " players").setStyle(SUCCESS), false);
+        sendFeedback(context, players.size() == 1 ? "command.reset.result.single" : "command.reset.result.multiple", players.size(), players.get(0));
 
         return players.size();
     }
@@ -117,9 +118,21 @@ public class SkinCommand {
 
         util.saveSkin(player.getUUID(), id);
 
-        context.getSource().sendSuccess(new TextComponent("Saved ").setStyle(SUCCESS).append(player.getName()).append(new TextComponent("'s skin as " + id)), false);
+        sendFeedback(context, "command.save.result", player);
 
         return 1;
+    }
+
+    private void sendFeedback(CommandContext<CommandSourceStack> context, String key, Object... args) {
+
+        try {
+            UUID u = context.getSource().getEntity() == null ? null : context.getSource().getEntity().getUUID();
+            MComponent message = SkinSetterAPI.getInstance().getLangProvider().getMessage(key, u, args);
+
+            context.getSource().getPlayerOrException().sendMessage(ConversionUtil.toMinecraftComponent(message), ChatType.SYSTEM, Util.NIL_UUID);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
 }

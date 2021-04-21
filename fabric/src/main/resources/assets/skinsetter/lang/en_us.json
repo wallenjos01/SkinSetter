@@ -1,0 +1,8 @@
+{
+  "command.set.result.single": "&aChanged the skin of &f%player_name%&a!",
+  "command.set.result.multiple": "&aChanged the skin of &f%d &aplayers!",
+  "command.set.error": "&cThat is not a valid skin!",
+  "command.reset.result.single": "&aReset the skin of &f%player_name%&a!",
+  "command.reset.result.multiple": "&aReset the skin of &f%d &aplayers!",
+  "command.save.result": "&aSaved the skin of &f%player_name% as &f%s&a!"
+}

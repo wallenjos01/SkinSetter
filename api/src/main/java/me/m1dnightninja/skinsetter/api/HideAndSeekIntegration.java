@@ -2,7 +2,7 @@ package me.m1dnightninja.skinsetter.api;
 
 import me.m1dnightninja.hideandseek.api.HideAndSeekAPI;
 import me.m1dnightninja.hideandseek.api.game.SkinOption;
-import me.m1dnightninja.midnightcore.api.skin.Skin;
+import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 
 import java.util.ArrayList;
 import java.util.List;

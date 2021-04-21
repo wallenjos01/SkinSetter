@@ -2,7 +2,7 @@ package me.m1dnightninja.skinsetter.api;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
-import me.m1dnightninja.midnightcore.api.skin.Skin;
+import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 
 import java.io.File;
 import java.util.*;

@@ -86,6 +86,7 @@ artifacts {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            version = project.ext.publicationVersion
             artifact(jar) {
                 builtBy remapJar
             }

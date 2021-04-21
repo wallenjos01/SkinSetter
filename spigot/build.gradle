@@ -79,6 +79,7 @@ artifacts {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            version = project.ext.publicationVersion
             artifact(jar)
             artifact(sourcesJar)
         }

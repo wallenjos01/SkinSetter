@@ -4,6 +4,8 @@ import me.m1dnightninja.midnightcore.api.ILogger;
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.config.ConfigProvider;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
+import me.m1dnightninja.midnightcore.api.module.lang.ILangModule;
+import me.m1dnightninja.midnightcore.api.module.lang.ILangProvider;
 
 import java.io.File;
 import java.util.UUID;
@@ -19,7 +21,9 @@ public class SkinSetterAPI {
     private final ConfigSection config;
     private final File skinFile;
 
-    public SkinSetterAPI(ILogger logger, PlayerDelegate delegate, File configFolder) {
+    private final ILangProvider langProvider;
+
+    public SkinSetterAPI(ILogger logger, PlayerDelegate delegate, File configFolder, ConfigSection defaultLang) {
 
         if(INSTANCE == null) {
             INSTANCE = this;
@@ -32,6 +36,8 @@ public class SkinSetterAPI {
         if(!skinFile.exists()) {
             prov.saveToFile(new ConfigSection(), skinFile);
         }
+
+        langProvider = MidnightCoreAPI.getInstance().getModule(ILangModule.class).createLangProvider(new File(configFolder, "lang"), prov, defaultLang);
 
         this.del = delegate;
         this.config = prov.loadFromFile(skinFile);
@@ -46,6 +52,10 @@ public class SkinSetterAPI {
 
     public boolean isOnline(UUID u) {
         return del.isOnline(u);
+    }
+
+    public ILangProvider getLangProvider() {
+        return langProvider;
     }
 
     public SkinRegistry getSkinRegistry() {

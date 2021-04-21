@@ -21,14 +21,16 @@ subprojects {
     project.ext.minorVersion = '0'
     project.ext.patchVersion = '0'
 
-    project.ext.apiVersion = project.ext.majorVersion + '.' + project.ext.minorVersion
-    project.ext.fullVersion = project.ext.apiVersion + '.' + project.ext.patchVersion
-
-
     def release = false
 
+    project.ext.apiVersion = project.ext.majorVersion + '.' + project.ext.minorVersion
+    project.ext.fullVersion = project.ext.apiVersion + '.' + project.ext.patchVersion
+    project.ext.publicationVersion = release ? project.ext.fullVersion : "${project.ext.apiVersion}-latest"
+
+
+
     group = "me.m1dnightninja.${project.ext.archiveName}"
-    version = release ? project.ext.fullVersion : "${project.ext.apiVersion}-latest"
+    version = project.ext.fullVersion
 
 
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -49,6 +51,7 @@ subprojects {
     }
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
         maven { url 'https://mdmc.ddns.net/maven' }

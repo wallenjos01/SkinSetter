@@ -1,9 +1,9 @@
 package me.m1dnightninja.skinsetter.common;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
-import me.m1dnightninja.midnightcore.api.module.ISkinModule;
-import me.m1dnightninja.midnightcore.api.skin.Skin;
-import me.m1dnightninja.midnightcore.api.skin.SkinCallback;
+import me.m1dnightninja.midnightcore.api.module.skin.ISkinModule;
+import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.midnightcore.api.module.skin.SkinCallback;
 import me.m1dnightninja.midnightcore.common.MojangUtil;
 import me.m1dnightninja.skinsetter.api.SkinRegistry;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
