@@ -1,11 +1,13 @@
 package me.m1dnightninja.skinsetter.common;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
+import me.m1dnightninja.midnightcore.api.config.ConfigSection;
+import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.skin.ISkinModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.module.skin.SkinCallback;
-import me.m1dnightninja.midnightcore.common.MojangUtil;
-import me.m1dnightninja.skinsetter.api.SkinRegistry;
+import me.m1dnightninja.midnightcore.common.util.MojangUtil;
+import me.m1dnightninja.skinsetter.api.SkinManager;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 
 import java.util.List;
@@ -13,37 +15,37 @@ import java.util.UUID;
 
 public final class SkinUtil {
 
-    private final ISkinModule mod;
-    private final SkinRegistry reg;
+    private final ISkinModule skinModule;
+    private final IPlayerDataModule dataModule;
+    private final SkinManager reg;
 
     public SkinUtil() {
-        mod = MidnightCoreAPI.getInstance().getModule(ISkinModule.class);
+        skinModule = MidnightCoreAPI.getInstance().getModule(ISkinModule.class);
+        dataModule = MidnightCoreAPI.getInstance().getModule(IPlayerDataModule.class);
 
-        if(mod == null) {
+        if(skinModule == null) {
             SkinSetterAPI.getLogger().warn("Unable to load Skin Module!");
         }
 
         this.reg = SkinSetterAPI.getInstance().getSkinRegistry();
-
-        reloadSkins();
     }
 
     public final void setSkin(UUID player, Skin skin) {
 
-        mod.setSkin(player, skin);
-        mod.updateSkin(player);
+        skinModule.setSkin(player, skin);
+        skinModule.updateSkin(player);
     }
 
     public final void resetSkin(UUID player) {
 
-        mod.resetSkin(player);
-        mod.updateSkin(player);
+        skinModule.resetSkin(player);
+        skinModule.updateSkin(player);
     }
 
     public final Skin getSkin(UUID player) {
 
         if(SkinSetterAPI.getInstance().isOnline(player)) {
-            return mod.getSkin(player);
+            return skinModule.getSkin(player);
         }
 
         return null;
@@ -52,7 +54,7 @@ public final class SkinUtil {
     public final void getSkinOnline(String playerName, SkinCallback cb) {
         new Thread(() -> {
             UUID u = MojangUtil.getUUID(playerName);
-            cb.onSkinAvailable(u, mod.getOnlineSkin(u));
+            cb.onSkinAvailable(u, skinModule.getOnlineSkin(u));
         }).start();
     }
 
@@ -75,11 +77,53 @@ public final class SkinUtil {
     }
 
     public final void saveSkins() {
-        reg.saveSkins(SkinSetterAPI.getInstance().getSkinFile());
+
+        reg.saveSkins(SkinSetterAPI.getInstance().getConfig());
+        SkinSetterAPI.getInstance().saveConfig();
     }
 
     public final void reloadSkins() {
-        reg.loadSkins(SkinSetterAPI.getInstance().getSkinFile());
+        reg.loadSkins(SkinSetterAPI.getInstance().getConfig());
+    }
+
+    public final void applyLoginSkin(UUID u) {
+
+        ConfigSection data = dataModule.getPlayerData(u);
+
+        if(data != null && data.has("skinsetter", ConfigSection.class)) {
+
+            ConfigSection skinsetter = data.getSection("skinsetter");
+            if (skinsetter.has("skin", Skin.class)) {
+
+                Skin s = skinsetter.get("skin", Skin.class);
+
+                setSkin(u, s);
+                return;
+
+            } else if (skinsetter.has("skin", String.class)) {
+
+                Skin s = getSavedSkin(skinsetter.getString("skin"));
+                if (s == null) return;
+
+                setSkin(u, s);
+                return;
+            }
+        }
+
+        if(SkinSetterAPI.getInstance().DEFAULT_SKIN != null) {
+            setSkin(u, SkinSetterAPI.getInstance().DEFAULT_SKIN);
+        }
+    }
+
+    public final void savePersistentSkin(UUID u) {
+        if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
+
+            Skin s = skinModule.getSkin(u);
+            if(s.equals(skinModule.getOnlineSkin(u)) || s.equals(SkinSetterAPI.getInstance().DEFAULT_SKIN)) return;
+
+            dataModule.getPlayerData(u).getOrCreateSection("skinsetter").set("skin", s);
+
+        }
     }
 
 }

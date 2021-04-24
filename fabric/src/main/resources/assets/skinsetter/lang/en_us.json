@@ -1,8 +1,13 @@
 {
   "command.set.result.single": "&aChanged the skin of &f%player_name%&a!",
   "command.set.result.multiple": "&aChanged the skin of &f%d &aplayers!",
-  "command.set.error": "&cThat is not a valid skin!",
   "command.reset.result.single": "&aReset the skin of &f%player_name%&a!",
   "command.reset.result.multiple": "&aReset the skin of &f%d &aplayers!",
-  "command.save.result": "&aSaved the skin of &f%player_name% as &f%s&a!"
+  "command.save.result": "&aSaved the skin of &f%player_name% as &f%s&a!",
+  "command.reload.result": "&aSkinSetter reloaded in %sms",
+  "command.setnpc.result": "&aChanged the skin of &f%s&a!",
+  "command.error.no_npc": "&cYou do not have an NPC selected!",
+  "command.error.invalid_npc": "&cYou can only change the skin of Player NPCs!",
+  "command.error.not_player": "&cOnly players can use that command!",
+  "command.error.invalid_skin": "&cThat is not a valid skin!"
 }

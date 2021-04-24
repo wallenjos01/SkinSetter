@@ -7,6 +7,9 @@ plugins {
 
 repositories {
     maven { url 'https://maven.fabricmc.net/' }
+    maven {
+        url 'https://jitpack.io/'
+    }
 }
 
 configurations {
@@ -28,6 +31,8 @@ dependencies {
     modImplementation("me.m1dnightninja.midnightcore:fabric:1.0-latest") {
         transitive = false
     }
+
+    modImplementation("com.github.samolego.Taterzens:taterzens-fabric:1.0.2")
 
     shade project(':api')
     shade project(':common')

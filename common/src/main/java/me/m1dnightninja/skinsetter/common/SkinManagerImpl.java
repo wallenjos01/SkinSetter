@@ -1,23 +1,27 @@
-package me.m1dnightninja.skinsetter.api;
+package me.m1dnightninja.skinsetter.common;
 
-import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.skinsetter.api.SkinManager;
+import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
+import me.m1dnightninja.skinsetter.common.integration.HideAndSeekIntegration;
 
-import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class SkinRegistry {
+public class SkinManagerImpl implements SkinManager {
 
     protected final HashMap<String, Skin> skins = new HashMap<>();
 
     private boolean hasIsPresent = false;
 
-    public SkinRegistry() {
+    public void init() {
         try {
             Class.forName("me.m1dnightninja.hideandseek.api.HideAndSeekAPI");
             hasIsPresent = true;
-            System.out.println("HideAndSeek found!");
+            SkinSetterAPI.getLogger().info("HideAndSeek found!");
         } catch(ClassNotFoundException ex) {
             // Ignore
         }
@@ -40,12 +44,7 @@ public class SkinRegistry {
         return s;
     }
 
-    public void loadSkins() {
-        loadSkins(SkinSetterAPI.getInstance().getSkinFile());
-    }
-
-    public void loadSkins(File f) {
-        ConfigSection sec = MidnightCoreAPI.getInstance().getDefaultConfigProvider().loadFromFile(f);
+    public void loadSkins(ConfigSection sec) {
 
         if(sec.has("skins", List.class)) {
             for(ConfigSection sct : sec.getList("skins", ConfigSection.class)) {
@@ -54,24 +53,18 @@ public class SkinRegistry {
         }
     }
 
-    public void saveSkins() {
-        saveSkins(SkinSetterAPI.getInstance().getSkinFile());
-    }
-
-    public void saveSkins(File f) {
-
-        List<ConfigSection> sec = new ArrayList<>();
+    public void saveSkins(ConfigSection sec) {
+        List<ConfigSection> list = new ArrayList<>();
 
         for(Map.Entry<String, Skin> ent : skins.entrySet()) {
+
             ConfigSection sct = Skin.SERIALIZER.serialize(ent.getValue());
             sct.set("id", ent.getKey());
-            sec.add(sct);
+            list.add(sct);
+
         }
 
-        ConfigSection out = new ConfigSection();
-        out.set("skins", sec);
-
-        MidnightCoreAPI.getInstance().getDefaultConfigProvider().saveToFile(out, f);
+        sec.set("skins", list);
     }
 
 }

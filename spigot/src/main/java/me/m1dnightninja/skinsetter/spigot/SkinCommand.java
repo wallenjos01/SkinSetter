@@ -1,7 +1,9 @@
 package me.m1dnightninja.skinsetter.spigot;
 
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
+import me.m1dnightninja.skinsetter.spigot.integration.CitizensIntegration;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -17,13 +19,20 @@ import java.util.List;
 
 public class SkinCommand implements CommandExecutor, TabCompleter {
 
+    private final boolean CITIZENS_ENABLED;
     private final SkinUtil util;
 
-    public SkinCommand() {
-        this.util = new SkinUtil();
-    }
+    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload");
 
-    private final List<String> subcommands = Arrays.asList("set", "reset", "save");
+    public SkinCommand(SkinUtil util) {
+        this.util = util;
+        this.CITIZENS_ENABLED = Bukkit.getPluginManager().isPluginEnabled("citizens");
+
+        if(CITIZENS_ENABLED) {
+            subcommands.add("setnpc");
+        }
+
+    }
 
     @Override
     public List<String> onTabComplete(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String s, @Nonnull String[] args) {
@@ -38,13 +47,19 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 }
                 break;
             case 2:
+                if(args[0].equals("reload")) break;
                 if(subcommands.contains(args[0]) && sender.hasPermission("skinsetter.command." + args[0])) {
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        suggestions.add(p.getDisplayName());
+                    if (CITIZENS_ENABLED && args[0].equals("setnpc")) {
+                        suggestions.addAll(util.getSkinNames());
+                    } else {
+                        for (Player p : Bukkit.getOnlinePlayers()) {
+                            suggestions.add(p.getDisplayName());
+                        }
                     }
                 }
                 break;
             case 3:
+                if(args[0].equals("reload")) break;
                 if(args[0].equals("set")) {
                     suggestions.addAll(util.getSkinNames());
                 }
@@ -69,7 +84,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
         }
 
         if(args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /skin <set/reset/save> <player> [id]");
+            sendArgs(sender);
             return true;
         }
 
@@ -144,10 +159,60 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 util.saveSkin(s_p.getUniqueId(), s_id);
                 sender.sendMessage(ChatColor.GREEN + "Skin saved");
+                break;
+
+            case "setnpc":
+                if(!CITIZENS_ENABLED) {
+                    sendArgs(sender);
+                }
+                if(!(sender instanceof Player)) {
+                    sender.sendMessage(ChatColor.RED + "Only players can use that command!");
+                    return true;
+                }
+                if(args.length != 2) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /skin setnpc <skin>");
+                    return true;
+                }
+
+                Skin sn_s = util.getSavedSkin(args[1]);
+
+                CitizensIntegration.setNPCSkin((Player) sender, sn_s).send(((Player) sender).getUniqueId());
+                break;
+
+            case "reload":
+
+                long time = System.currentTimeMillis();
+                SkinSetterAPI.getInstance().reloadConfig();
+                sender.sendMessage(ChatColor.GREEN + "SkinSetter reloaded in " + (System.currentTimeMillis() - time) + "ms");
+
+                break;
 
         }
 
         return true;
+    }
+
+    private void sendArgs(CommandSender sender) {
+
+        StringBuilder builder = new StringBuilder(ChatColor.RED + "Usage: /skin <");
+        int found = 0;
+        for(String cmd : subcommands) {
+            if(sender.hasPermission("skinsetter.command." + cmd)) {
+                if(found > 0) {
+                    builder.append("/");
+                }
+                builder.append(cmd);
+                found++;
+            }
+        }
+        builder.append(">");
+
+        if(found == 0) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to use that command!");
+        }
+
+        sender.sendMessage(ChatColor.RED + builder.toString());
+
     }
 
 }

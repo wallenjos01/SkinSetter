@@ -1,4 +1,4 @@
-package me.m1dnightninja.skinsetter.api;
+package me.m1dnightninja.skinsetter.common.integration;
 
 import me.m1dnightninja.hideandseek.api.HideAndSeekAPI;
 import me.m1dnightninja.hideandseek.api.game.SkinOption;
@@ -9,13 +9,13 @@ import java.util.List;
 
 public class HideAndSeekIntegration {
 
-    static Skin getSkin(String id) {
+    public static Skin getSkin(String id) {
 
         SkinOption opt = HideAndSeekAPI.getInstance().getRegistry().getSkin(id);
         return opt == null ? null : opt.getSkin();
     }
 
-    static List<String> getSkinNames() {
+    public static List<String> getSkinNames() {
 
         List<String> out = new ArrayList<>();
         for(SkinOption opt : HideAndSeekAPI.getInstance().getRegistry().getSkins()) {

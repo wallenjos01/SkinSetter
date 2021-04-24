@@ -5,11 +5,15 @@ import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.common.JavaLogger;
 import me.m1dnightninja.midnightcore.spigot.config.YamlConfigProvider;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
+import me.m1dnightninja.skinsetter.common.SkinManagerImpl;
+import me.m1dnightninja.skinsetter.common.SkinUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SkinSetter extends JavaPlugin {
+
+    private SkinUtil util;
 
     @Override
     public void onEnable() {
@@ -28,7 +32,7 @@ public class SkinSetter extends JavaPlugin {
         }
 
         JavaLogger log = new JavaLogger(this.getLogger());
-        if(!MidnightCoreAPI.getInstance().areAllModulesLoaded("skin")) {
+        if(!MidnightCoreAPI.getInstance().areAllModulesLoaded("midnightcore:skin","midnightcore:lang","midnightcore:player_data")) {
 
             log.warn("Unable to enable SkinSetter! One or more required MidnightCore modules are missing!");
             Bukkit.getPluginManager().disablePlugin(this);
@@ -36,17 +40,22 @@ public class SkinSetter extends JavaPlugin {
         }
 
         ConfigSection sec = new YamlConfigProvider().loadFromStream(getResource("en_us.yml"));
-        new SkinSetterAPI(log, u -> Bukkit.getPlayer(u) != null, getDataFolder(), sec);
+        new SkinSetterAPI(log, u -> Bukkit.getPlayer(u) != null, getDataFolder(), sec, new SkinManagerImpl());
 
-        SkinCommand executor = new SkinCommand();
+        util = new SkinUtil();
+
+        SkinCommand executor = new SkinCommand(util);
         cmd.setExecutor(executor);
         cmd.setTabCompleter(executor);
+
+        getServer().getPluginManager().registerEvents(new PlayerListener(util), this);
+
     }
 
     @Override
     public void onDisable() {
         SkinSetterAPI api = SkinSetterAPI.getInstance();
         if(api == null) return;
-        api.getSkinRegistry().saveSkins();
+        util.saveSkins();
     }
 }

@@ -2,7 +2,9 @@ package me.m1dnightninja.skinsetter.fabric;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
@@ -10,14 +12,13 @@ import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
 import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.Util;
+import me.m1dnightninja.skinsetter.fabric.integragion.TaterzensIntegration;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
-import net.minecraft.network.chat.ChatType;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
@@ -25,16 +26,20 @@ import java.util.UUID;
 
 public class SkinCommand {
 
-    private final SkinUtil util;
-    public SkinCommand() {
+    private final boolean TATERZENS_LOADED;
 
-        this.util = new SkinUtil();
-        ServerLifecycleEvents.SERVER_STOPPING.register(minecraftServer -> util.saveSkins());
+    private final SkinUtil util;
+
+    public SkinCommand(SkinUtil util) {
+
+        this.util = util;
+
+        TATERZENS_LOADED = FabricLoader.getInstance().isModLoaded("taterzens");
     }
 
     public void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 
-        dispatcher.register(Commands.literal("skin")
+        LiteralArgumentBuilder<CommandSourceStack> cmd = Commands.literal("skin")
             .requires(stack -> hasPermission(stack, "skinsetter.command"))
             .then(Commands.literal("set")
                 .requires(stack -> hasPermission(stack, "skinsetter.command.set"))
@@ -59,7 +64,22 @@ public class SkinCommand {
                     )
                 )
             )
-        );
+            .then(Commands.literal("reload")
+                .requires(stack -> hasPermission(stack, "skinsetter.command.reload"))
+                .executes(this::executeReload)
+            );
+
+        if(TATERZENS_LOADED) {
+            cmd.then(Commands.literal("setnpc")
+                .requires(stack -> hasPermission(stack, "skinsetter.command.setnpc"))
+                .then(Commands.argument("skin", StringArgumentType.word())
+                    .suggests((context, builder) -> SharedSuggestionProvider.suggest(util.getSkinNames(), builder))
+                    .executes(context -> executeSetNpc(context, context.getArgument("skin", String.class)))
+                )
+            );
+        }
+
+        dispatcher.register(cmd);
 
     }
 
@@ -118,21 +138,45 @@ public class SkinCommand {
 
         util.saveSkin(player.getUUID(), id);
 
-        sendFeedback(context, "command.save.result", player);
+        sendFeedback(context, "command.save.result", id, player);
 
         return 1;
     }
 
+    private int executeSetNpc(CommandContext<CommandSourceStack> context, String id) throws CommandSyntaxException {
+
+        if(!TATERZENS_LOADED) return 0;
+
+        ServerPlayer player = context.getSource().getPlayerOrException();
+
+        Skin s = util.getSavedSkin(id);
+        if(s == null) {
+            SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.invalid_skin", player.getUUID()).send(player.getUUID());
+        }
+
+        TaterzensIntegration.setNPCSkin(player, s).send(player.getUUID());
+
+        return 1;
+    }
+
+    private int executeReload(CommandContext<CommandSourceStack> context) {
+
+        long time = System.currentTimeMillis();
+        SkinSetterAPI.getInstance().reloadConfig();
+        time = System.currentTimeMillis() - time;
+
+        sendFeedback(context, "command.reload.result", time);
+
+        return (int) time;
+
+    }
+
     private void sendFeedback(CommandContext<CommandSourceStack> context, String key, Object... args) {
 
-        try {
-            UUID u = context.getSource().getEntity() == null ? null : context.getSource().getEntity().getUUID();
-            MComponent message = SkinSetterAPI.getInstance().getLangProvider().getMessage(key, u, args);
+        UUID u = context.getSource().getEntity() == null ? null : context.getSource().getEntity().getUUID();
+        MComponent message = SkinSetterAPI.getInstance().getLangProvider().getMessage(key, u, args);
 
-            context.getSource().getPlayerOrException().sendMessage(ConversionUtil.toMinecraftComponent(message), ChatType.SYSTEM, Util.NIL_UUID);
-        } catch(Exception ex) {
-            ex.printStackTrace();
-        }
+        context.getSource().sendSuccess(ConversionUtil.toMinecraftComponent(message), false);
     }
 
 }

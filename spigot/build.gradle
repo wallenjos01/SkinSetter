@@ -20,6 +20,11 @@ repositories {
     maven {
         url "https://jitpack.io/"
     }
+
+    maven {
+        url 'https://repo.citizensnpcs.co/'
+    }
+
 }
 
 dependencies {
@@ -31,6 +36,8 @@ dependencies {
     compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
     compileOnly("me.m1dnightninja.midnightcore:common:1.0-latest")
     compileOnly("me.m1dnightninja.midnightcore:spigot:1.0-latest")
+
+    compileOnly("net.citizensnpcs:citizens-main:2.0.27-SNAPSHOT")
 
     shade(project(":api"))
     shade(project(":common"))
