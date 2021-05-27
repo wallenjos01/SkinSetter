@@ -1,5 +1,6 @@
 package me.m1dnightninja.skinsetter.spigot;
 
+import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
@@ -116,12 +117,12 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                             sender.sendMessage(ChatColor.RED + "That is not a valid player name!");
                             return;
                         }
-                        util.setSkin(p.getUniqueId(), oskin);
+                        util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(p.getUniqueId()), oskin);
                         sender.sendMessage(ChatColor.GREEN + "Skin set");
                     });
 
                 } else {
-                    util.setSkin(p.getUniqueId(), skin);
+                    util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(p.getUniqueId()), skin);
                     sender.sendMessage(ChatColor.GREEN + "Skin set");
                 }
 
@@ -139,7 +140,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                util.resetSkin(r_p.getUniqueId());
+                util.resetSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(r_p.getUniqueId()));
                 sender.sendMessage(ChatColor.GREEN + "Skin reset");
 
                 break;
@@ -157,7 +158,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                util.saveSkin(s_p.getUniqueId(), s_id);
+                util.saveSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(s_p.getUniqueId()), s_id);
                 sender.sendMessage(ChatColor.GREEN + "Skin saved");
                 break;
 
@@ -176,7 +177,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 Skin sn_s = util.getSavedSkin(args[1]);
 
-                CitizensIntegration.setNPCSkin((Player) sender, sn_s).send(((Player) sender).getUniqueId());
+                CitizensIntegration.setNPCSkin((Player) sender, sn_s).send(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(((Player) sender).getUniqueId()));
                 break;
 
             case "reload":

@@ -1,6 +1,9 @@
 package me.m1dnightninja.skinsetter.fabric.integragion;
 
+import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
+import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import net.minecraft.nbt.CompoundTag;
@@ -17,10 +20,12 @@ public class TaterzensIntegration {
         TaterzenEditor editor = (TaterzenEditor) player;
         UUID u = player.getUUID();
 
-        TaterzenNPC npc = editor.getNpc();
-        if(npc == null) return SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.no_npc", u);
+        MPlayer pl = MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(u);
 
-        if(npc.getGameProfile() == null) return SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.invalid_npc", u);
+        TaterzenNPC npc = editor.getNpc();
+        if(npc == null) return SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.no_npc", pl);
+
+        if(npc.getGameProfile() == null) return SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.invalid_npc", pl);
 
         CompoundTag tag = new CompoundTag();
         tag.putString("value", skin.getBase64());
@@ -29,7 +34,7 @@ public class TaterzensIntegration {
         npc.setSkinFromTag(tag);
         npc.sendProfileUpdates();
 
-        return SkinSetterAPI.getInstance().getLangProvider().getMessage("command.setnpc.result", u, npc.getGameProfile().getName());
+        return SkinSetterAPI.getInstance().getLangProvider().getMessage("command.setnpc.result", pl, new CustomPlaceholderInline("npc_name", npc.getGameProfile().getName()));
 
     }
 

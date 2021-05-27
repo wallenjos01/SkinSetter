@@ -1,5 +1,6 @@
 package me.m1dnightninja.skinsetter.spigot;
 
+import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,7 +24,7 @@ public class PlayerListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                util.applyLoginSkin(event.getPlayer().getUniqueId());
+                util.applyLoginSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(event.getPlayer().getUniqueId()));
             }
         }.runTask(SkinSetter.getPlugin(SkinSetter.class));
     }
@@ -31,7 +32,7 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.LOW)
     public void onLeave(PlayerQuitEvent event) {
 
-        util.savePersistentSkin(event.getPlayer().getUniqueId());
+        util.savePersistentSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(event.getPlayer().getUniqueId()));
     }
 
 }

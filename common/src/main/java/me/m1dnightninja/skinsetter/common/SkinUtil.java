@@ -6,10 +6,12 @@ import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.skin.ISkinModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.module.skin.SkinCallback;
+import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.common.util.MojangUtil;
 import me.m1dnightninja.skinsetter.api.SkinManager;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,6 +20,8 @@ public final class SkinUtil {
     private final ISkinModule skinModule;
     private final IPlayerDataModule dataModule;
     private final SkinManager reg;
+
+    private final HashMap<MPlayer, Skin> skins = new HashMap<>();
 
     public SkinUtil() {
         skinModule = MidnightCoreAPI.getInstance().getModule(ISkinModule.class);
@@ -30,21 +34,25 @@ public final class SkinUtil {
         this.reg = SkinSetterAPI.getInstance().getSkinRegistry();
     }
 
-    public final void setSkin(UUID player, Skin skin) {
+    public final void setSkin(MPlayer player, Skin skin) {
+
+        skins.put(player, skin);
 
         skinModule.setSkin(player, skin);
         skinModule.updateSkin(player);
     }
 
-    public final void resetSkin(UUID player) {
+    public final void resetSkin(MPlayer player) {
+
+        skins.remove(player);
 
         skinModule.resetSkin(player);
         skinModule.updateSkin(player);
     }
 
-    public final Skin getSkin(UUID player) {
+    public final Skin getSkin(MPlayer player) {
 
-        if(SkinSetterAPI.getInstance().isOnline(player)) {
+        if(SkinSetterAPI.getInstance().isOnline(player.getUUID())) {
             return skinModule.getSkin(player);
         }
 
@@ -67,7 +75,7 @@ public final class SkinUtil {
         return reg.getSkinNames();
     }
 
-    public final void saveSkin(UUID player, String name) {
+    public final void saveSkin(MPlayer player, String name) {
 
         Skin s = getSkin(player);
 
@@ -86,9 +94,9 @@ public final class SkinUtil {
         reg.loadSkins(SkinSetterAPI.getInstance().getConfig());
     }
 
-    public final void applyLoginSkin(UUID u) {
+    public final void applyLoginSkin(MPlayer u) {
 
-        ConfigSection data = dataModule.getPlayerData(u);
+        ConfigSection data = dataModule.getPlayerData(u.getUUID());
 
         if(data != null && data.has("skinsetter", ConfigSection.class)) {
 
@@ -115,13 +123,15 @@ public final class SkinUtil {
         }
     }
 
-    public final void savePersistentSkin(UUID u) {
+    public final void savePersistentSkin(MPlayer u) {
         if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
 
             Skin s = skinModule.getSkin(u);
-            if(s.equals(skinModule.getOnlineSkin(u)) || s.equals(SkinSetterAPI.getInstance().DEFAULT_SKIN)) return;
+            if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().DEFAULT_SKIN)) {
+                dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", null);
+            }
 
-            dataModule.getPlayerData(u).getOrCreateSection("skinsetter").set("skin", s);
+            dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", s);
 
         }
     }

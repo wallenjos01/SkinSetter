@@ -48,8 +48,8 @@ public class SkinSetter implements MidnightCoreModInitializer {
         CommandRegistrationCallback.EVENT.register(((commandDispatcher, b) -> new SkinCommand(util).register(commandDispatcher)));
         ServerLifecycleEvents.SERVER_STOPPING.register(s -> util.saveSkins());
 
-        Event.register(PlayerJoinedEvent.class, this, event -> util.applyLoginSkin(event.getPlayer().getUUID()));
-        Event.register(PlayerDisconnectEvent.class, this, 10, event -> util.savePersistentSkin(event.getPlayer().getUUID()));
+        Event.register(PlayerJoinedEvent.class, this, event -> util.applyLoginSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(event.getPlayer().getUUID())));
+        Event.register(PlayerDisconnectEvent.class, this, 10, event -> util.savePersistentSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(event.getPlayer().getUUID())));
 
     }
 }

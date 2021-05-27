@@ -5,10 +5,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
+import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
 import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
+import me.m1dnightninja.midnightcore.fabric.player.FabricPlayer;
 import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
@@ -22,7 +26,6 @@ import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.List;
-import java.util.UUID;
 
 public class SkinCommand {
 
@@ -95,10 +98,10 @@ public class SkinCommand {
         }
 
         for(ServerPlayer ent : players) {
-            util.setSkin(ent.getUUID(), s);
+            util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(ent.getUUID()), s);
         }
 
-        sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", players.size(), players.get(0));
+        sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", new CustomPlaceholderInline("count", players.size()+""), FabricPlayer.wrap(players.get(0)));
 
         return players.size();
     }
@@ -113,10 +116,10 @@ public class SkinCommand {
 
             MidnightCore.getServer().submit(() -> {
                 for(ServerPlayer ent : players) {
-                    util.setSkin(ent.getUUID(), skin1);
+                    util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(ent.getUUID()), skin1);
                 }
 
-                sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", players.size(), players.get(0));
+                sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", new CustomPlaceholderInline("count", players.size()+""), FabricPlayer.wrap(players.get(0)));
             });
         });
 
@@ -126,19 +129,20 @@ public class SkinCommand {
     private int executeReset(CommandContext<CommandSourceStack> context, List<ServerPlayer> players) {
 
         for(ServerPlayer ent : players) {
-            util.resetSkin(ent.getUUID());
+            util.resetSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(ent.getUUID()));
         }
 
-        sendFeedback(context, players.size() == 1 ? "command.reset.result.single" : "command.reset.result.multiple", players.size(), players.get(0));
+        MPlayer player = FabricPlayer.wrap(players.get(0));
+        sendFeedback(context, players.size() == 1 ? "command.reset.result.single" : "command.reset.result.multiple", new CustomPlaceholderInline("count", players.size()+""), player);
 
         return players.size();
     }
 
     private int executeSave(CommandContext<CommandSourceStack> context, ServerPlayer player, String id) {
 
-        util.saveSkin(player.getUUID(), id);
+        util.saveSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(player.getUUID()), id);
 
-        sendFeedback(context, "command.save.result", id, player);
+        sendFeedback(context, "command.save.result", id, new CustomPlaceholderInline("id", id), FabricPlayer.wrap(player));
 
         return 1;
     }
@@ -147,14 +151,19 @@ public class SkinCommand {
 
         if(!TATERZENS_LOADED) return 0;
 
-        ServerPlayer player = context.getSource().getPlayerOrException();
+        MPlayer player = MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(context.getSource().getPlayerOrException().getUUID());
 
         Skin s = util.getSavedSkin(id);
         if(s == null) {
-            SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.invalid_skin", player.getUUID()).send(player.getUUID());
+            SkinSetterAPI.getInstance().getLangProvider().sendMessage("command.error.invalid_skin", player);
         }
 
-        TaterzensIntegration.setNPCSkin(player, s).send(player.getUUID());
+        ServerPlayer pl = ((FabricPlayer) player).getMinecraftPlayer();
+        if(pl == null) {
+            return 0;
+        }
+
+        TaterzensIntegration.setNPCSkin(pl, s).send(player);
 
         return 1;
     }
@@ -165,7 +174,7 @@ public class SkinCommand {
         SkinSetterAPI.getInstance().reloadConfig();
         time = System.currentTimeMillis() - time;
 
-        sendFeedback(context, "command.reload.result", time);
+        sendFeedback(context, "command.reload.result", new CustomPlaceholderInline("time", time+""));
 
         return (int) time;
 
@@ -173,7 +182,7 @@ public class SkinCommand {
 
     private void sendFeedback(CommandContext<CommandSourceStack> context, String key, Object... args) {
 
-        UUID u = context.getSource().getEntity() == null ? null : context.getSource().getEntity().getUUID();
+        MPlayer u = (context.getSource().getEntity() instanceof ServerPlayer) ? FabricPlayer.wrap((ServerPlayer) context.getSource().getEntity()) : null;
         MComponent message = SkinSetterAPI.getInstance().getLangProvider().getMessage(key, u, args);
 
         context.getSource().sendSuccess(ConversionUtil.toMinecraftComponent(message), false);
