@@ -25,7 +25,7 @@ public class SkinSetter extends JavaPlugin {
             return;
         }
 
-        if(!getDataFolder().exists() && !(getDataFolder().mkdir() && getDataFolder().setReadable(true) && getDataFolder().setWritable(true))) {
+        if(!getDataFolder().exists() && !getDataFolder().mkdir()) {
             getLogger().warning("Unable to create config file!");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
@@ -40,7 +40,9 @@ public class SkinSetter extends JavaPlugin {
         }
 
         ConfigSection sec = new YamlConfigProvider().loadFromStream(getResource("en_us.yml"));
-        new SkinSetterAPI(log, u -> Bukkit.getPlayer(u) != null, getDataFolder(), sec, new SkinManagerImpl());
+        ConfigSection cfg = new YamlConfigProvider().loadFromStream(getResource("config.yml"));
+
+        new SkinSetterAPI(log, getDataFolder(), sec, cfg, new SkinManagerImpl());
 
         util = new SkinUtil();
 

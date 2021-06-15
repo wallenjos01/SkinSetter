@@ -1,13 +1,18 @@
 {
+  "command.error.no_npc": "&cYou do not have an NPC selected!",
+  "command.error.invalid_npc": "&cYou can only change the skin of Player NPCs!",
+  "command.error.invalid_name": "&cThat is not a valid player name!",
+  "command.error.not_player": "&cOnly players can use that command!",
+  "command.error.invalid_skin": "&cThat is not a valid skin!",
   "command.set.result.single": "&aChanged the skin of &f%player_name%&a!",
   "command.set.result.multiple": "&aChanged the skin of &f%count% &aplayers!",
   "command.reset.result.single": "&aReset the skin of &f%player_name%&a!",
   "command.reset.result.multiple": "&aReset the skin of &f%count% &aplayers!",
-  "command.save.result": "&aSaved the skin of &f%player_name% as &f%s&a!",
+  "command.save.result": "&aSaved the skin of &f%player_name% as &f%id%&a!",
   "command.reload.result": "&aSkinSetter reloaded in %time%ms",
   "command.setnpc.result": "&aChanged the skin of &f%npc_name%&a!",
-  "command.error.no_npc": "&cYou do not have an NPC selected!",
-  "command.error.invalid_npc": "&cYou can only change the skin of Player NPCs!",
-  "command.error.not_player": "&cOnly players can use that command!",
-  "command.error.invalid_skin": "&cThat is not a valid skin!"
+  "command.setdefault.result": "&aDefault skin set to in &f%id%&a!",
+  "command.cleardefault.result": "&aDefault skin cleared!",
+  "command.persistence.result.enabled": "&aPersistent skins enabled!",
+  "command.persistence.result.disabled": "&aPersistent skins disabled!"
 }

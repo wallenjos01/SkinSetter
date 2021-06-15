@@ -47,7 +47,7 @@ public class SkinManagerImpl implements SkinManager {
     public void loadSkins(ConfigSection sec) {
 
         if(sec.has("skins", List.class)) {
-            for(ConfigSection sct : sec.getList("skins", ConfigSection.class)) {
+            for(ConfigSection sct : sec.getListFiltered("skins", ConfigSection.class)) {
                 skins.put(sct.getString("id"), Skin.SERIALIZER.deserialize(sct));
             }
         }

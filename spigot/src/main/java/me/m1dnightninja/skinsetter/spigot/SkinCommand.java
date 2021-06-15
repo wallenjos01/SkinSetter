@@ -1,7 +1,12 @@
 package me.m1dnightninja.skinsetter.spigot;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
+import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
+import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
+import me.m1dnightninja.midnightcore.api.player.MPlayer;
+import me.m1dnightninja.midnightcore.spigot.module.lang.LangModule;
+import me.m1dnightninja.midnightcore.spigot.player.SpigotPlayer;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
 import me.m1dnightninja.skinsetter.spigot.integration.CitizensIntegration;
@@ -23,7 +28,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
     private final boolean CITIZENS_ENABLED;
     private final SkinUtil util;
 
-    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload");
+    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload", "setdefault", "cleardefault", "persistence");
 
     public SkinCommand(SkinUtil util) {
         this.util = util;
@@ -50,8 +55,15 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
             case 2:
                 if(args[0].equals("reload")) break;
                 if(subcommands.contains(args[0]) && sender.hasPermission("skinsetter.command." + args[0])) {
-                    if (CITIZENS_ENABLED && args[0].equals("setnpc")) {
+                    if ((CITIZENS_ENABLED && args[0].equals("setnpc")) || args[0].equals("setdefault")) {
+
                         suggestions.addAll(util.getSkinNames());
+
+                    } else if(args[0].equals("persistence")) {
+
+                        suggestions.add("enable");
+                        suggestions.add("disable");
+
                     } else {
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             suggestions.add(p.getDisplayName());
@@ -80,7 +92,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String s, @Nonnull String[] args) {
 
         if(!sender.hasPermission("skinsetter.command")) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use that command!");
+            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
             return true;
         }
 
@@ -90,14 +102,15 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
         }
 
         if(!sender.hasPermission("skinsetter.command." + args[0])) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use that command!");
+            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
             return true;
         }
 
         switch(args[0]) {
             case "set":
+
                 if(args.length != 3) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /skin set <player> [id/name]");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin set <player> [id/name]"));
                     return true;
                 }
 
@@ -105,73 +118,93 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 String id = args[2];
 
                 if(p == null) {
-                    sender.sendMessage(ChatColor.RED + "That is not a valid player!");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
                     return true;
                 }
+
+                MPlayer mp = SpigotPlayer.wrap(p);
+
                 Skin skin = util.getSavedSkin(id);
                 if(skin == null) {
 
-                    sender.sendMessage(ChatColor.GREEN + "Attempting to retrieve skin for player " + id + "...");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.online", new CustomPlaceholderInline("name", id));
+
                     util.getSkinOnline(id, (uid, oskin) -> {
                         if(oskin == null) {
-                            sender.sendMessage(ChatColor.RED + "That is not a valid player name!");
+                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
                             return;
                         }
-                        util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(p.getUniqueId()), oskin);
-                        sender.sendMessage(ChatColor.GREEN + "Skin set");
+                        util.setSkin(mp, oskin);
+                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
                     });
 
                 } else {
+
                     util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(p.getUniqueId()), skin);
-                    sender.sendMessage(ChatColor.GREEN + "Skin set");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
                 }
 
                 break;
+
             case "reset":
+
                 if(args.length != 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /skin reset <player>");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin reset <player>"));
                     return true;
                 }
 
-                Player r_p = Bukkit.getPlayerExact(args[1]);
+                p = Bukkit.getPlayerExact(args[1]);
 
-                if(r_p == null) {
-                    sender.sendMessage(ChatColor.RED + "That is not a valid player!");
+                if(p == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
                     return true;
                 }
 
-                util.resetSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(r_p.getUniqueId()));
-                sender.sendMessage(ChatColor.GREEN + "Skin reset");
+                mp = SpigotPlayer.wrap(p);
+
+                util.resetSkin(mp);
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.reset.result", mp);
 
                 break;
+
             case "save":
+
                 if(args.length != 3) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /skin save <player> [id]");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin save <player> [id]"));
                     return true;
                 }
 
-                Player s_p = Bukkit.getPlayerExact(args[1]);
-                String s_id = args[2];
+                p = Bukkit.getPlayerExact(args[1]);
+                id = args[2];
 
-                if(s_p == null) {
-                    sender.sendMessage(ChatColor.RED + "That is not a valid player!");
+                if(util.getSavedSkin(id) != null && !sender.hasPermission("skinsetter.overwrite_skins")) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_overwrite");
                     return true;
                 }
 
-                util.saveSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(s_p.getUniqueId()), s_id);
-                sender.sendMessage(ChatColor.GREEN + "Skin saved");
+                if(p == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
+                    return true;
+                }
+
+                mp = SpigotPlayer.wrap(p);
+
+                util.saveSkin(mp, id);
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.save.result", mp, new CustomPlaceholderInline("id", id));
                 break;
 
             case "setnpc":
+
                 if(!CITIZENS_ENABLED) {
                     sendArgs(sender);
+                    return true;
                 }
                 if(!(sender instanceof Player)) {
-                    sender.sendMessage(ChatColor.RED + "Only players can use that command!");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.not_player");
                     return true;
                 }
                 if(args.length != 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /skin setnpc <skin>");
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin setnpc <skin>"));
                     return true;
                 }
 
@@ -184,10 +217,82 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 long time = System.currentTimeMillis();
                 SkinSetterAPI.getInstance().reloadConfig();
-                sender.sendMessage(ChatColor.GREEN + "SkinSetter reloaded in " + (System.currentTimeMillis() - time) + "ms");
+                time = System.currentTimeMillis() - time;
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.reload.result", new CustomPlaceholderInline("time", time+""));
 
                 break;
 
+            case "setdefault":
+
+                if(args.length != 2) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin setdefault <skin>"));
+                    return true;
+                }
+
+                id = args[1];
+                skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(id);
+
+                if(skin == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                    return true;
+                }
+
+                SkinSetterAPI.getInstance().DEFAULT_SKIN = skin;
+                SkinSetterAPI.getInstance().getConfig().set("default_skin", id);
+                SkinSetterAPI.getInstance().saveConfig();
+
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.setdefault.result", new CustomPlaceholderInline("id", id));
+
+                break;
+
+            case "cleardefault":
+
+                SkinSetterAPI.getInstance().DEFAULT_SKIN = null;
+                SkinSetterAPI.getInstance().getConfig().set("default_skin", "");
+                SkinSetterAPI.getInstance().saveConfig();
+
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.cleardefault.result");
+
+                break;
+
+            case "persistence":
+
+                if(args.length != 2) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistance <enable/disable>"));
+                    return true;
+                }
+
+                String action = args[1];
+                if(action.equals("enable")) {
+
+                    SkinSetterAPI.getInstance().PERSISTENT_SKINS = true;
+                    SkinSetterAPI.getInstance().getConfig().set("persistent_skins", true);
+                    SkinSetterAPI.getInstance().saveConfig();
+
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.persistence.result.enabled");
+
+                } else if(action.equals("disable")) {
+
+                    SkinSetterAPI.getInstance().PERSISTENT_SKINS = false;
+                    SkinSetterAPI.getInstance().getConfig().set("persistent_skins", false);
+                    SkinSetterAPI.getInstance().saveConfig();
+
+                    IPlayerDataModule mod = MidnightCoreAPI.getInstance().getModule(IPlayerDataModule.class);
+
+                    for(MPlayer pl : MidnightCoreAPI.getInstance().getPlayerManager()) {
+
+                        mod.getPlayerData(pl.getUUID()).set("skinsetter", null);
+                        mod.savePlayerData(pl.getUUID());
+                    }
+
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.persistence.result.disabled");
+
+                } else {
+
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistance <enable/disable>"));
+                }
+
+                break;
         }
 
         return true;
@@ -195,7 +300,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
     private void sendArgs(CommandSender sender) {
 
-        StringBuilder builder = new StringBuilder(ChatColor.RED + "Usage: /skin <");
+        StringBuilder builder = new StringBuilder(ChatColor.RED + "/skin <");
         int found = 0;
         for(String cmd : subcommands) {
             if(sender.hasPermission("skinsetter.command." + cmd)) {
@@ -209,10 +314,10 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
         builder.append(">");
 
         if(found == 0) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use that command!");
+            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
         }
 
-        sender.sendMessage(ChatColor.RED + builder.toString());
+        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", builder.toString()));
 
     }
 

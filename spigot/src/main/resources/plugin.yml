@@ -1,9 +1,9 @@
-name: SkinSetter
-version: ${version}
-main: me.m1dnightninja.skinsetter.spigot.SkinSetter
-author: M1dnight_Ninja
+name: '${modname}'
+version: '${version}'
+main: 'me.m1dnightninja.${modid}.spigot.${modclass}'
+author: 'M1dnight_Ninja'
 depend: [ MidnightCore ]
 commands:
   skin:
     description: Main SkinSetter command
-    usage: /skin <set/reset/save> <player> [id]
+    usage: /skin <set/reset/save/reload/setnpc/setdefault/cleardefault> <player> [id]

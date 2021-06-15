@@ -6,12 +6,14 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
+import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
 import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
+import me.m1dnightninja.midnightcore.fabric.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.fabric.player.FabricPlayer;
 import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
@@ -65,6 +67,26 @@ public class SkinCommand {
                     .then(Commands.argument("id", StringArgumentType.word())
                         .executes(context -> executeSave(context, context.getArgument("player", EntitySelector.class).findSinglePlayer(context.getSource()), context.getArgument("id", String.class)))
                     )
+                )
+            )
+            .then(Commands.literal("setdefault")
+                .requires(stack -> hasPermission(stack, "skinsetter.command.setdefault"))
+                .then(Commands.argument("id", StringArgumentType.word())
+                    .suggests(((context, builder) -> SharedSuggestionProvider.suggest(util.getSkinNames(), builder)))
+                    .executes(context -> executeSetDefault(context, context.getArgument("id", String.class)))
+                )
+            )
+            .then(Commands.literal("cleardefault")
+                .requires(stack -> hasPermission(stack, "skinsetter.command.setdefault"))
+                .executes(this::executeClearDefault)
+            )
+            .then(Commands.literal("persistence")
+                .requires(stack -> hasPermission(stack, "skinsetter.command.persistence"))
+                .then(Commands.literal("enable")
+                    .executes(this::executePersistenceEnable)
+                )
+                .then(Commands.literal("disable")
+                    .executes(this::executePersistenceDisable)
                 )
             )
             .then(Commands.literal("reload")
@@ -164,6 +186,65 @@ public class SkinCommand {
         }
 
         TaterzensIntegration.setNPCSkin(pl, s).send(player);
+
+        return 1;
+    }
+
+    private int executeSetDefault(CommandContext<CommandSourceStack> context, String skinId) {
+
+        Skin skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(skinId);
+
+        if(skin == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        SkinSetterAPI.getInstance().DEFAULT_SKIN = skin;
+        SkinSetterAPI.getInstance().getConfig().set("default_skin", skinId);
+        SkinSetterAPI.getInstance().saveConfig();
+
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.setdefault.result", new CustomPlaceholderInline("id", skinId));
+
+        return 1;
+    }
+
+    private int executeClearDefault(CommandContext<CommandSourceStack> context) {
+
+        SkinSetterAPI.getInstance().DEFAULT_SKIN = null;
+        SkinSetterAPI.getInstance().getConfig().set("default_skin", "");
+        SkinSetterAPI.getInstance().saveConfig();
+
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.cleardefault.result");
+
+        return 1;
+    }
+
+    private int executePersistenceEnable(CommandContext<CommandSourceStack> context) {
+
+        SkinSetterAPI.getInstance().PERSISTENT_SKINS = true;
+        SkinSetterAPI.getInstance().getConfig().set("persistent_skins", true);
+        SkinSetterAPI.getInstance().saveConfig();
+
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.enable");
+
+        return 1;
+    }
+
+    private int executePersistenceDisable(CommandContext<CommandSourceStack> context) {
+
+        SkinSetterAPI.getInstance().PERSISTENT_SKINS = false;
+        SkinSetterAPI.getInstance().getConfig().set("persistent_skins", false);
+        SkinSetterAPI.getInstance().saveConfig();
+
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.disable");
+
+        IPlayerDataModule dataModule = MidnightCoreAPI.getInstance().getModule(IPlayerDataModule.class);
+
+        for(MPlayer pl : MidnightCoreAPI.getInstance().getPlayerManager()) {
+
+            dataModule.getPlayerData(pl.getUUID()).set("skinsetter", null);
+            dataModule.savePlayerData(pl.getUUID());
+        }
 
         return 1;
     }

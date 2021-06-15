@@ -41,7 +41,9 @@ public class SkinSetter implements MidnightCoreModInitializer {
         }
 
         ConfigSection sec = new JsonConfigProvider().loadFromStream(getClass().getResourceAsStream("/assets/skinsetter/lang/en_us.json"));
-        new SkinSetterAPI(log, u -> MidnightCore.getServer().getPlayerList().getPlayer(u) != null, configFolder, sec, new SkinManagerImpl());
+        ConfigSection cfg = new JsonConfigProvider().loadFromStream(getClass().getResourceAsStream("/assets/skinsetter/config.json"));
+
+        new SkinSetterAPI(log, configFolder, sec, cfg, new SkinManagerImpl());
 
         SkinUtil util = new SkinUtil();
 

@@ -52,7 +52,7 @@ public final class SkinUtil {
 
     public final Skin getSkin(MPlayer player) {
 
-        if(SkinSetterAPI.getInstance().isOnline(player.getUUID())) {
+        if(!player.isOffline()) {
             return skinModule.getSkin(player);
         }
 
@@ -96,25 +96,28 @@ public final class SkinUtil {
 
     public final void applyLoginSkin(MPlayer u) {
 
-        ConfigSection data = dataModule.getPlayerData(u.getUUID());
+        if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
 
-        if(data != null && data.has("skinsetter", ConfigSection.class)) {
+            ConfigSection data = dataModule.getPlayerData(u.getUUID());
 
-            ConfigSection skinsetter = data.getSection("skinsetter");
-            if (skinsetter.has("skin", Skin.class)) {
+            if (data != null && data.has("skinsetter", ConfigSection.class)) {
 
-                Skin s = skinsetter.get("skin", Skin.class);
+                ConfigSection skinsetter = data.getSection("skinsetter");
+                if (skinsetter.has("skin", Skin.class)) {
 
-                setSkin(u, s);
-                return;
+                    Skin s = skinsetter.get("skin", Skin.class);
 
-            } else if (skinsetter.has("skin", String.class)) {
+                    setSkin(u, s);
+                    return;
 
-                Skin s = getSavedSkin(skinsetter.getString("skin"));
-                if (s == null) return;
+                } else if (skinsetter.has("skin", String.class)) {
 
-                setSkin(u, s);
-                return;
+                    Skin s = getSavedSkin(skinsetter.getString("skin"));
+                    if (s == null) return;
+
+                    setSkin(u, s);
+                    return;
+                }
             }
         }
 
@@ -124,16 +127,25 @@ public final class SkinUtil {
     }
 
     public final void savePersistentSkin(MPlayer u) {
+
         if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
 
-            Skin s = skinModule.getSkin(u);
             if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().DEFAULT_SKIN)) {
-                dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", null);
+
+                dataModule.getPlayerData(u.getUUID()).set("skinsetter", null);
+                dataModule.savePlayerData(u.getUUID());
+
+            } else {
+
+                Skin s = skins.get(u);
+
+                dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", s);
+                dataModule.savePlayerData(u.getUUID());
+
             }
-
-            dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", s);
-
         }
+
+        skins.remove(u);
     }
 
 }

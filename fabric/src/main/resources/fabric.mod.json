@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "skinsetter",
+  "id": "${modid}",
   "version": "${version}",
-  "name": "SkinSetter",
+  "name": "${modname}",
   "description": "Change players' skins",
   "authors": [
     "M1dnight_Ninja"
@@ -13,13 +13,13 @@
   "environment": "*",
   "entrypoints": {
     "midnightcore:mod": [
-      "me.m1dnightninja.skinsetter.fabric.SkinSetter"
+      "me.m1dnightninja.${modid}.fabric.${modclass}"
     ]
   },
   "depends": {
     "fabricloader": ">=0.10.6+build.214",
     "fabric": "*",
-    "minecraft": "1.16.x",
+    "minecraft": "${minecraftVersion}.x",
     "midnightcore": "1.0.x"
   }
 }
