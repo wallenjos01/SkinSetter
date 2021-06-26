@@ -59,6 +59,15 @@ public final class SkinUtil {
         return null;
     }
 
+    public final Skin getLoginSkin(MPlayer player) {
+
+        if(!player.isOffline()) {
+            return skinModule.getOriginalSkin(player);
+        }
+
+        return null;
+    }
+
     public final void getSkinOnline(String playerName, SkinCallback cb) {
         new Thread(() -> {
             UUID u = MojangUtil.getUUID(playerName);
@@ -80,8 +89,6 @@ public final class SkinUtil {
         if(player.isOffline()) return;
 
         Skin s = skinModule.getSkin(player);
-        if(s == null) return;
-
         reg.saveSkin(s, name);
     }
 

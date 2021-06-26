@@ -1,7 +1,7 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-    id 'fabric-loom' version '0.6-SNAPSHOT'
+    id 'fabric-loom' version '0.8-SNAPSHOT'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
@@ -42,7 +42,7 @@ dependencies {
 processResources {
 
     Map<String, ?> ex = new HashMap<>()
-    ex.put("version", project.ext.fullVersion)
+    ex.put("modversion", project.ext.fullVersion)
     ex.put("modid", project.ext.modid)
     ex.put("modname", project.ext.modname)
     ex.put("modclass", project.ext.modclass)
@@ -88,7 +88,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             version = project.ext.publicationVersion
-            artifact(jar) {
+            artifact(remapJar) {
                 builtBy remapJar
             }
             artifact(sourcesJar) {

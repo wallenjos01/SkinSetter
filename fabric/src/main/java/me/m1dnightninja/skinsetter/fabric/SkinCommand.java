@@ -51,7 +51,10 @@ public class SkinCommand {
                 .then(Commands.argument("players", EntityArgument.players())
                     .then(Commands.argument("skin", StringArgumentType.word())
                         .suggests(((context, builder) -> SharedSuggestionProvider.suggest(util.getSkinNames(), builder)))
-                        .executes(context -> executeSet(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("skin", String.class)))
+                        .executes(context -> executeSet(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("skin", String.class), false))
+                        .then(Commands.literal("-o")
+                            .executes(context -> executeSet(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("skin", String.class), true))
+                        )
                     )
                 )
             )
@@ -112,11 +115,18 @@ public class SkinCommand {
         return st.hasPermission(2) || PermissionHelper.check(st, perm);
     }
 
-    private int executeSet(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin) {
+    private int executeSet(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin, boolean online) {
 
         Skin s = util.getSavedSkin(skin);
-        if(s == null) {
-            return executeSetOnline(context, players, skin);
+        if(s == null || online) {
+
+            ServerPlayer player = MidnightCore.getServer().getPlayerList().getPlayerByName(skin);
+            if(player != null) {
+                s = util.getLoginSkin(FabricPlayer.wrap(player));
+
+            } else {
+                return executeSetOnline(context, players, skin);
+            }
         }
 
         for(ServerPlayer ent : players) {

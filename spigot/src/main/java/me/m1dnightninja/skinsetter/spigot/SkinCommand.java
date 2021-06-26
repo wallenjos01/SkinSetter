@@ -76,6 +76,9 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 if(args[0].equals("set")) {
                     suggestions.addAll(util.getSkinNames());
                 }
+                break;
+            case 4:
+                if(args[0].equals("set")) suggestions.add("-o");
         }
 
         List<String> out = new ArrayList<>();
@@ -109,8 +112,8 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
         switch(args[0]) {
             case "set":
 
-                if(args.length != 3) {
-                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin set <player> [id/name]"));
+                if(args.length < 3) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin set <player> [id/name] (-o)"));
                     return true;
                 }
 
@@ -123,24 +126,38 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 }
 
                 MPlayer mp = SpigotPlayer.wrap(p);
-
                 Skin skin = util.getSavedSkin(id);
-                if(skin == null) {
 
-                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.online", new CustomPlaceholderInline("name", id));
+                boolean original  = (args.length > 3 && args[3].equals("-o"));
 
-                    util.getSkinOnline(id, (uid, oskin) -> {
-                        if(oskin == null) {
-                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
-                            return;
-                        }
-                        util.setSkin(mp, oskin);
+                if(original || skin == null) {
+
+                    Player other = Bukkit.getPlayerExact(id);
+                    if(other != null) {
+
+                        MPlayer mo = SpigotPlayer.wrap(other);
+                        skin = original ? util.getLoginSkin(mo) : util.getSkin(mo);
+
+                        util.setSkin(mp, skin);
                         LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
-                    });
+
+                    } else {
+
+                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.online", new CustomPlaceholderInline("name", id));
+
+                        util.getSkinOnline(id, (uid, oskin) -> {
+                            if (oskin == null) {
+                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
+                                return;
+                            }
+                            util.setSkin(mp, oskin);
+                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
+                        });
+                    }
 
                 } else {
 
-                    util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(p.getUniqueId()), skin);
+                    util.setSkin(mp, skin);
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
                 }
 

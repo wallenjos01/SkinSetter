@@ -20,7 +20,7 @@ subprojects {
 
     project.ext.majorVersion = '2'
     project.ext.minorVersion = '0'
-    project.ext.patchVersion = '1'
+    project.ext.patchVersion = '2'
 
     def release = false
 
