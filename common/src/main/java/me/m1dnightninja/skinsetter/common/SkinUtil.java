@@ -77,8 +77,9 @@ public final class SkinUtil {
 
     public final void saveSkin(MPlayer player, String name) {
 
-        Skin s = getSkin(player);
+        if(player.isOffline()) return;
 
+        Skin s = skinModule.getSkin(player);
         if(s == null) return;
 
         reg.saveSkin(s, name);
