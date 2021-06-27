@@ -133,7 +133,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 if(original || skin == null) {
 
                     Player other = Bukkit.getPlayerExact(id);
-                    if(other != null) {
+                    if(other != null && !Bukkit.getServer().getOnlineMode()) {
 
                         MPlayer mo = SpigotPlayer.wrap(other);
                         skin = original ? util.getLoginSkin(mo) : util.getSkin(mo);
