@@ -6,9 +6,13 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     maven { url 'https://maven.fabricmc.net/' }
     maven {
         url 'https://jitpack.io/'
+    }
+    maven {
+        url = "https://maven.nucleoid.xyz/"
     }
 }
 
@@ -32,7 +36,7 @@ dependencies {
         transitive = false
     }
 
-    modImplementation("com.github.samolego.Taterzens:taterzens-fabric:1.0.2")
+    modImplementation 'org.samo_lego:taterzens-fabric:1.2.0'
 
     shade project(':api')
     shade project(':common')

@@ -15,12 +15,12 @@ subprojects {
     project.ext.modid = "skinsetter"
     project.ext.modclass = "SkinSetter"
     project.ext.modname = "SkinSetter"
-    project.ext.minecraftVersion = "1.17"
+    project.ext.minecraftVersion = "1.17.1"
     project.ext.minecraftMajorVersion = "1.17"
 
     project.ext.majorVersion = '2'
     project.ext.minorVersion = '0'
-    project.ext.patchVersion = '2'
+    project.ext.patchVersion = '3'
 
     def release = false
 
