@@ -2,7 +2,8 @@ name: '${modname}'
 version: '${modversion}'
 main: 'me.m1dnightninja.${modid}.spigot.${modclass}'
 author: 'M1dnight_Ninja'
-depend: [ MidnightCore ]
+depend:
+- MidnightCore
 commands:
   skin:
     description: Main SkinSetter command

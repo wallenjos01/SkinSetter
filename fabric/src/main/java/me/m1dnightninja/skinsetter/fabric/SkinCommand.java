@@ -121,11 +121,13 @@ public class SkinCommand {
         if(s == null || online) {
 
             ServerPlayer player = MidnightCore.getServer().getPlayerList().getPlayerByName(skin);
-            if(player != null && !MidnightCore.getServer().usesAuthentication()) {
-                s = util.getLoginSkin(FabricPlayer.wrap(player));
+            if(player == null || (online && !MidnightCore.getServer().usesAuthentication())) {
+
+                return executeSetOnline(context, players, skin);
 
             } else {
-                return executeSetOnline(context, players, skin);
+
+                s = util.getLoginSkin(FabricPlayer.wrap(player));
             }
         }
 

@@ -133,15 +133,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 if(original || skin == null) {
 
                     Player other = Bukkit.getPlayerExact(id);
-                    if(other != null && !Bukkit.getServer().getOnlineMode()) {
-
-                        MPlayer mo = SpigotPlayer.wrap(other);
-                        skin = original ? util.getLoginSkin(mo) : util.getSkin(mo);
-
-                        util.setSkin(mp, skin);
-                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
-
-                    } else {
+                    if(other == null || (original && !Bukkit.getServer().getOnlineMode())) {
 
                         LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.online", new CustomPlaceholderInline("name", id));
 
@@ -153,6 +145,15 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                             util.setSkin(mp, oskin);
                             LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
                         });
+
+                    } else {
+
+                        MPlayer mo = SpigotPlayer.wrap(other);
+                        skin = original ? util.getLoginSkin(mo) : util.getSkin(mo);
+
+                        util.setSkin(mp, skin);
+                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
+
                     }
 
                 } else {
