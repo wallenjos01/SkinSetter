@@ -7,7 +7,6 @@ import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.api.config.FileConfig;
 import me.m1dnightninja.midnightcore.api.module.lang.ILangModule;
 import me.m1dnightninja.midnightcore.api.module.lang.ILangProvider;
-import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 
 import java.io.File;
 
@@ -20,7 +19,7 @@ public class SkinSetterAPI {
     private final FileConfig config;
 
     public boolean PERSISTENT_SKINS;
-    public Skin DEFAULT_SKIN;
+    public SavedSkin DEFAULT_SKIN;
 
     private final ConfigSection defaultConfig;
     private final ILangProvider langProvider;
@@ -32,6 +31,7 @@ public class SkinSetterAPI {
             LOGGER = logger;
         }
 
+        MidnightCoreAPI.getConfigRegistry().registerSerializer(SavedSkin.class, SavedSkin.SERIALIZER);
         ConfigProvider configProvider = MidnightCoreAPI.getInstance().getDefaultConfigProvider();
 
         File skinFile = new File(configFolder, "config" + configProvider.getFileExtension());
@@ -86,6 +86,8 @@ public class SkinSetterAPI {
 
         PERSISTENT_SKINS = config.getRoot().getBoolean("persistent_skins");
         DEFAULT_SKIN = registry.getSkin(config.getRoot().getString("default_skin"));
+
+        langProvider.reloadAllEntries();
     }
 
     public static SkinSetterAPI getInstance() {

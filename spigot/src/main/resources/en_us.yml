@@ -16,3 +16,4 @@
 "command.cleardefault.result": "&aDefault skin cleared!"
 "command.persistence.result.enabled": "&aPersistent skins enabled!"
 "command.persistence.result.disabled": "&aPersistent skins disabled!"
+"command.error.no_saved": "&cThere are no saved skins!"

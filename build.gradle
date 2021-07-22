@@ -19,8 +19,8 @@ subprojects {
     project.ext.minecraftMajorVersion = "1.17"
 
     project.ext.majorVersion = '2'
-    project.ext.minorVersion = '0'
-    project.ext.patchVersion = '3'
+    project.ext.minorVersion = '1'
+    project.ext.patchVersion = '0'
 
     def release = false
 

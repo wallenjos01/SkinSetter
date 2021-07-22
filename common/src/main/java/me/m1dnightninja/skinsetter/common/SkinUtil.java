@@ -2,24 +2,28 @@ package me.m1dnightninja.skinsetter.common;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
+import me.m1dnightninja.midnightcore.api.inventory.AbstractInventoryGUI;
+import me.m1dnightninja.midnightcore.api.inventory.MItemStack;
 import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.skin.ISkinModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.module.skin.SkinCallback;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
+import me.m1dnightninja.midnightcore.api.registry.MIdentifier;
 import me.m1dnightninja.midnightcore.common.util.MojangUtil;
+import me.m1dnightninja.skinsetter.api.SavedSkin;
 import me.m1dnightninja.skinsetter.api.SkinManager;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public final class SkinUtil {
 
     private final ISkinModule skinModule;
     private final IPlayerDataModule dataModule;
     private final SkinManager reg;
+
+    private final Random random;
 
     private final HashMap<MPlayer, Skin> skins = new HashMap<>();
 
@@ -31,6 +35,7 @@ public final class SkinUtil {
             SkinSetterAPI.getLogger().warn("Unable to load Skin Module!");
         }
 
+        this.random = new Random();
         this.reg = SkinSetterAPI.getInstance().getSkinRegistry();
     }
 
@@ -75,13 +80,21 @@ public final class SkinUtil {
         }).start();
     }
 
-    public final Skin getSavedSkin(String id) {
+    public final SavedSkin getSavedSkin(String id) {
         return reg.getSkin(id);
     }
 
-    public final List<String> getSkinNames() {
+    public final List<String> getSkinNames(MPlayer player) {
 
-        return reg.getSkinNames();
+        return reg.getSkinNames(player);
+    }
+
+    public final SavedSkin getRandomSkin(MPlayer player) {
+
+        List<SavedSkin> sks = reg.getRandomSkins(player);
+        if(sks.size() == 0) return null;
+
+        return sks.get(random.nextInt(sks.size()));
     }
 
     public final void saveSkin(MPlayer player, String name) {
@@ -89,7 +102,7 @@ public final class SkinUtil {
         if(player.isOffline()) return;
 
         Skin s = skinModule.getSkin(player);
-        reg.saveSkin(s, name);
+        reg.saveSkin(new SavedSkin(name, s), name);
     }
 
     public final void saveSkins() {
@@ -120,17 +133,17 @@ public final class SkinUtil {
 
                 } else if (skinsetter.has("skin", String.class)) {
 
-                    Skin s = getSavedSkin(skinsetter.getString("skin"));
+                    SavedSkin s = getSavedSkin(skinsetter.getString("skin"));
                     if (s == null) return;
 
-                    setSkin(u, s);
+                    setSkin(u, s.getSkin());
                     return;
                 }
             }
         }
 
         if(SkinSetterAPI.getInstance().DEFAULT_SKIN != null) {
-            setSkin(u, SkinSetterAPI.getInstance().DEFAULT_SKIN);
+            setSkin(u, SkinSetterAPI.getInstance().DEFAULT_SKIN.getSkin());
         }
     }
 
@@ -138,22 +151,84 @@ public final class SkinUtil {
 
         if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
 
-            if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().DEFAULT_SKIN)) {
+            if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().DEFAULT_SKIN.getSkin())) {
 
                 dataModule.getPlayerData(u.getUUID()).set("skinsetter", null);
-                dataModule.savePlayerData(u.getUUID());
 
             } else {
 
                 Skin s = skins.get(u);
 
                 dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", s);
-                dataModule.savePlayerData(u.getUUID());
 
             }
+            dataModule.savePlayerData(u.getUUID());
         }
 
         skins.remove(u);
+    }
+
+    public final void openGUI(MPlayer player, MPlayer perms) {
+
+        try {
+            AbstractInventoryGUI gui = MidnightCoreAPI.getInstance().createInventoryGUI(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.set.title", player));
+
+            List<SavedSkin> skins = reg.getSkins(perms);
+
+            int pages = skins.size() < 55 ? 1 : (skins.size() / 45) + 1;
+
+            MItemStack nextPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("lime_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.next_page", player)).build();
+            MItemStack prevPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("red_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.prev_page", player)).build();
+
+            AbstractInventoryGUI.ClickAction next = (type, user) -> gui.open(user, gui.getPlayerPage(user) + 1);
+            AbstractInventoryGUI.ClickAction prev = (type, user) -> gui.open(user, gui.getPlayerPage(user) - 1);
+
+            if (pages > 1) {
+                for (int i = 0; i < pages; i++) {
+
+                    int offset = i * 54;
+
+                    if (i > 0) {
+                        gui.setItem(prevPage, offset + 45, prev);
+                    }
+                    if (i + 1 < pages) {
+                        gui.setItem(nextPage, offset + 53, next);
+                    }
+                }
+
+                int index = 0;
+                int page = 0;
+                for (SavedSkin skin : skins) {
+
+                    gui.setItem(skin.getItemStack(), (page * 54) + index, (type, user) -> {
+                        setSkin(user, skin.getSkin());
+                        gui.close(user);
+                    });
+
+                    index++;
+                    if(index > 44) {
+                        page++;
+                        index = 0;
+                    }
+                }
+
+            } else {
+
+                int index = 0;
+                for (SavedSkin skin : skins) {
+
+                    gui.setItem(skin.getItemStack(), index, (type, user) -> {
+                        setSkin(user, skin.getSkin());
+                        gui.close(user);
+                    });
+                    index++;
+                }
+            }
+
+            gui.open(player, 0);
+        } catch (Throwable th) {
+            th.printStackTrace();
+        }
     }
 
 }

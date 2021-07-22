@@ -7,6 +7,7 @@ import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.spigot.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.spigot.player.SpigotPlayer;
+import me.m1dnightninja.skinsetter.api.SavedSkin;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
 import me.m1dnightninja.skinsetter.spigot.integration.CitizensIntegration;
@@ -28,7 +29,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
     private final boolean CITIZENS_ENABLED;
     private final SkinUtil util;
 
-    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload", "setdefault", "cleardefault", "persistence");
+    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload", "setdefault", "cleardefault", "persistence", "setrandom");
 
     public SkinCommand(SkinUtil util) {
         this.util = util;
@@ -57,7 +58,11 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 if(subcommands.contains(args[0]) && sender.hasPermission("skinsetter.command." + args[0])) {
                     if ((CITIZENS_ENABLED && args[0].equals("setnpc")) || args[0].equals("setdefault")) {
 
-                        suggestions.addAll(util.getSkinNames());
+                        MPlayer mpl = null;
+                        if(sender instanceof Player) {
+                            mpl = SpigotPlayer.wrap(((Player) sender));
+                        }
+                        suggestions.addAll(util.getSkinNames(mpl));
 
                     } else if(args[0].equals("persistence")) {
 
@@ -74,7 +79,11 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
             case 3:
                 if(args[0].equals("reload")) break;
                 if(args[0].equals("set")) {
-                    suggestions.addAll(util.getSkinNames());
+                    MPlayer mpl = null;
+                    if(sender instanceof Player) {
+                        mpl = SpigotPlayer.wrap(((Player) sender));
+                    }
+                    suggestions.addAll(util.getSkinNames(mpl));
                 }
                 break;
             case 4:
@@ -126,11 +135,12 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 }
 
                 MPlayer mp = SpigotPlayer.wrap(p);
-                Skin skin = util.getSavedSkin(id);
+                SavedSkin saved = util.getSavedSkin(id);
+                Skin skin;
 
                 boolean original  = (args.length > 3 && args[3].equals("-o"));
 
-                if(original || skin == null) {
+                if(original || saved == null) {
 
                     Player other = Bukkit.getPlayerExact(id);
                     if(other == null || (original && !Bukkit.getServer().getOnlineMode())) {
@@ -158,7 +168,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 } else {
 
-                    util.setSkin(mp, skin);
+                    util.setSkin(mp, saved.getSkin());
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
                 }
 
@@ -226,9 +236,14 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                Skin sn_s = util.getSavedSkin(args[1]);
+                saved = util.getSavedSkin(args[1]);
+                if(saved == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                    return true;
+                }
+                skin = saved.getSkin();
 
-                CitizensIntegration.setNPCSkin((Player) sender, sn_s).send(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(((Player) sender).getUniqueId()));
+                CitizensIntegration.setNPCSkin((Player) sender, skin).send(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(((Player) sender).getUniqueId()));
                 break;
 
             case "reload":
@@ -248,14 +263,14 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 }
 
                 id = args[1];
-                skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(id);
+                saved = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(id);
 
-                if(skin == null) {
+                if(saved == null) {
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                     return true;
                 }
 
-                SkinSetterAPI.getInstance().DEFAULT_SKIN = skin;
+                SkinSetterAPI.getInstance().DEFAULT_SKIN = saved;
                 SkinSetterAPI.getInstance().getConfig().set("default_skin", id);
                 SkinSetterAPI.getInstance().saveConfig();
 
@@ -309,6 +324,32 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistance <enable/disable>"));
                 }
+
+                break;
+
+            case "setrandom":
+
+                MPlayer mpl = null;
+                if(sender instanceof Player) {
+                    mpl = SpigotPlayer.wrap(((Player) sender));
+                }
+
+                saved = util.getRandomSkin(mpl);
+                if(saved == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_saved");
+                    return true;
+                }
+
+                p = Bukkit.getPlayerExact(args[1]);
+                if(p == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
+                    return true;
+                }
+
+                mp = SpigotPlayer.wrap(p);
+                util.setSkin(mp, saved.getSkin());
+
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
 
                 break;
         }

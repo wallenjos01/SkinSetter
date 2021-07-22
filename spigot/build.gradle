@@ -46,7 +46,7 @@ dependencies {
 processResources {
 
     Map<String, ?> ex = new HashMap<>()
-    ex.put("modversion", project.ext.fullVersion)
+    ex.put("version", project.ext.fullVersion)
     ex.put("modid", project.ext.modid)
     ex.put("modname", project.ext.modname)
     ex.put("modclass", project.ext.modclass)

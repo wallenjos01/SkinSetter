@@ -16,6 +16,7 @@ import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
 import me.m1dnightninja.midnightcore.fabric.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.fabric.player.FabricPlayer;
 import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
+import me.m1dnightninja.skinsetter.api.SavedSkin;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.SkinUtil;
 import me.m1dnightninja.skinsetter.fabric.integragion.TaterzensIntegration;
@@ -49,8 +50,18 @@ public class SkinCommand {
             .then(Commands.literal("set")
                 .requires(stack -> hasPermission(stack, "skinsetter.command.set"))
                 .then(Commands.argument("players", EntityArgument.players())
+                    .executes(context -> executeSet(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), null, false))
                     .then(Commands.argument("skin", StringArgumentType.word())
-                        .suggests(((context, builder) -> SharedSuggestionProvider.suggest(util.getSkinNames(), builder)))
+                        .suggests(((context, builder) -> {
+
+                            MPlayer player = null;
+                            try {
+                                player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                            } catch (CommandSyntaxException ex) {
+                                // Ignore
+                            }
+                            return SharedSuggestionProvider.suggest(util.getSkinNames(player), builder);
+                        }))
                         .executes(context -> executeSet(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("skin", String.class), false))
                         .then(Commands.literal("-o")
                             .executes(context -> executeSet(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("skin", String.class), true))
@@ -75,7 +86,16 @@ public class SkinCommand {
             .then(Commands.literal("setdefault")
                 .requires(stack -> hasPermission(stack, "skinsetter.command.setdefault"))
                 .then(Commands.argument("id", StringArgumentType.word())
-                    .suggests(((context, builder) -> SharedSuggestionProvider.suggest(util.getSkinNames(), builder)))
+                    .suggests(((context, builder) -> {
+
+                        MPlayer player = null;
+                        try {
+                            player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                        } catch (CommandSyntaxException ex) {
+                            // Ignore
+                        }
+                        return SharedSuggestionProvider.suggest(util.getSkinNames(player), builder);
+                    }))
                     .executes(context -> executeSetDefault(context, context.getArgument("id", String.class)))
                 )
             )
@@ -95,13 +115,27 @@ public class SkinCommand {
             .then(Commands.literal("reload")
                 .requires(stack -> hasPermission(stack, "skinsetter.command.reload"))
                 .executes(this::executeReload)
+            )
+            .then(Commands.literal("setrandom")
+                .requires(stack -> hasPermission(stack, "skinsetter.command.setrandom"))
+                .then(Commands.argument("players", EntityArgument.players())
+                    .executes(context -> executeSetRandom(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource())))
+                )
             );
 
         if(TATERZENS_LOADED) {
             cmd.then(Commands.literal("setnpc")
                 .requires(stack -> hasPermission(stack, "skinsetter.command.setnpc"))
                 .then(Commands.argument("skin", StringArgumentType.word())
-                    .suggests((context, builder) -> SharedSuggestionProvider.suggest(util.getSkinNames(), builder))
+                    .suggests((context, builder) -> {
+                        MPlayer player = null;
+                        try {
+                            player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                        } catch (CommandSyntaxException ex) {
+                            // Ignore
+                        }
+                        return SharedSuggestionProvider.suggest(util.getSkinNames(player), builder);
+                    })
                     .executes(context -> executeSetNpc(context, context.getArgument("skin", String.class)))
                 )
             );
@@ -117,8 +151,27 @@ public class SkinCommand {
 
     private int executeSet(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin, boolean online) {
 
-        Skin s = util.getSavedSkin(skin);
-        if(s == null || online) {
+        if(skin == null) {
+
+            MPlayer player = null;
+            if(context.getSource().getEntity() != null) {
+                try {
+                    player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                } catch (CommandSyntaxException ex) {
+                    // Ignore
+                }
+            }
+
+            for(ServerPlayer pl : players) {
+                util.openGUI(FabricPlayer.wrap(pl), player);
+            }
+            return players.size();
+        }
+
+        SavedSkin s = util.getSavedSkin(skin);
+        Skin sk;
+
+        if((s == null || online) && hasPermission(context.getSource(), "skinsetter.command.set.online")) {
 
             ServerPlayer player = MidnightCore.getServer().getPlayerList().getPlayerByName(skin);
             if(player == null || (online && !MidnightCore.getServer().usesAuthentication())) {
@@ -127,12 +180,31 @@ public class SkinCommand {
 
             } else {
 
-                s = util.getLoginSkin(FabricPlayer.wrap(player));
+                sk = util.getLoginSkin(FabricPlayer.wrap(player));
             }
+        } else {
+
+            if(s == null) {
+                LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(),"command.error.invalid_skin");
+                return 0;
+            }
+
+            if(context.getSource().getEntity() != null) {
+                try {
+                    if (!s.canUse(FabricPlayer.wrap(context.getSource().getPlayerOrException()))) {
+                        LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                        return 0;
+                    }
+                } catch (CommandSyntaxException ex) {
+                    // Ignore, Console/CommandBlock executed command
+                }
+            }
+
+            sk = s.getSkin();
         }
 
         for(ServerPlayer ent : players) {
-            util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(ent.getUUID()), s);
+            util.setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(ent.getUUID()), sk);
         }
 
         sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", new CustomPlaceholderInline("count", players.size()+""), FabricPlayer.wrap(players.get(0)));
@@ -142,9 +214,14 @@ public class SkinCommand {
 
     private int executeSetOnline(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin) {
 
+        if(!hasPermission(context.getSource(), "skinsetter.command.set.online")) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(),"command.error.invalid_skin");
+            return 0;
+        }
+
         util.getSkinOnline(skin, (uid, skin1) -> {
             if(skin1 == null) {
-                sendFeedback(context, "command.set.error");
+                sendFeedback(context, "command.error.invalid_name");
                 return;
             }
 
@@ -187,9 +264,10 @@ public class SkinCommand {
 
         MPlayer player = MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(context.getSource().getPlayerOrException().getUUID());
 
-        Skin s = util.getSavedSkin(id);
+        SavedSkin s = util.getSavedSkin(id);
         if(s == null) {
             SkinSetterAPI.getInstance().getLangProvider().sendMessage("command.error.invalid_skin", player);
+            return 0;
         }
 
         ServerPlayer pl = ((FabricPlayer) player).getMinecraftPlayer();
@@ -197,14 +275,14 @@ public class SkinCommand {
             return 0;
         }
 
-        TaterzensIntegration.setNPCSkin(pl, s).send(player);
+        TaterzensIntegration.setNPCSkin(pl, s.getSkin()).send(player);
 
         return 1;
     }
 
     private int executeSetDefault(CommandContext<CommandSourceStack> context, String skinId) {
 
-        Skin skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(skinId);
+        SavedSkin skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(skinId);
 
         if(skin == null) {
             LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
@@ -271,6 +349,34 @@ public class SkinCommand {
 
         return (int) time;
 
+    }
+
+    private int executeSetRandom(CommandContext<CommandSourceStack> context, List<ServerPlayer> players) {
+
+        MPlayer mpl = null;
+        if(context.getSource().getEntity() != null) {
+            try {
+                mpl = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+            } catch (CommandSyntaxException ex) {
+                // Ignore
+            }
+        }
+
+        for(ServerPlayer pl : players) {
+
+            SavedSkin s = util.getRandomSkin(mpl);
+            if(s == null) {
+
+                LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_saved");
+                return 0;
+            }
+
+            util.setSkin(FabricPlayer.wrap(pl), s.getSkin());
+        }
+
+        sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", new CustomPlaceholderInline("count", players.size()+""), FabricPlayer.wrap(players.get(0)));
+
+        return players.size();
     }
 
     private void sendFeedback(CommandContext<CommandSourceStack> context, String key, Object... args) {

@@ -4,6 +4,7 @@
   "command.error.invalid_name": "&cThat is not a valid player name!",
   "command.error.not_player": "&cOnly players can use that command!",
   "command.error.invalid_skin": "&cThat is not a valid skin!",
+  "command.error.no_saved": "&cThere are no saved skins!",
   "command.set.result.single": "&aChanged the skin of &f%player_name%&a!",
   "command.set.result.multiple": "&aChanged the skin of &f%count% &aplayers!",
   "command.reset.result.single": "&aReset the skin of &f%player_name%&a!",
@@ -14,5 +15,8 @@
   "command.setdefault.result": "&aDefault skin set to in &f%id%&a!",
   "command.cleardefault.result": "&aDefault skin cleared!",
   "command.persistence.result.enabled": "&aPersistent skins enabled!",
-  "command.persistence.result.disabled": "&aPersistent skins disabled!"
+  "command.persistence.result.disabled": "&aPersistent skins disabled!",
+  "gui.set.title": "Select a Skin",
+  "gui.next_page": "&aNext",
+  "gui.prev_page": "&cBack"
 }
