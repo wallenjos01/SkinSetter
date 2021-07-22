@@ -121,13 +121,12 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
         switch(args[0]) {
             case "set":
 
-                if(args.length < 3) {
+                if(args.length < 2) {
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin set <player> [id/name] (-o)"));
                     return true;
                 }
 
                 Player p = Bukkit.getPlayerExact(args[1]);
-                String id = args[2];
 
                 if(p == null) {
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
@@ -135,6 +134,18 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 }
 
                 MPlayer mp = SpigotPlayer.wrap(p);
+
+                if(args.length < 3) {
+                    if(!(sender instanceof Player)) {
+                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin set <player> [id/name] (-o)"));
+                        return true;
+                    }
+
+                    util.openGUI(mp, SpigotPlayer.wrap((Player) sender));
+                    return true;
+                }
+
+                String id = args[2];
                 SavedSkin saved = util.getSavedSkin(id);
                 Skin skin;
 
