@@ -14,13 +14,23 @@ public interface SkinManager {
 
     void saveSkin(SavedSkin s, String id);
 
-    List<String> getSkinNames(MPlayer user);
+    List<String> getSkinNames(MPlayer user, String group, boolean excludeNoRandom);
 
-    List<String> getRandomSkinNames(MPlayer user);
+    default List<String> getAllSkinNames() {
+        return getSkinNames(null, null, false);
+    }
 
-    List<SavedSkin> getSkins(MPlayer user);
+    List<SavedSkin> getSkins(MPlayer user, String group, boolean excludeNoRandom);
 
-    List<SavedSkin> getRandomSkins(MPlayer user);
+    default List<SavedSkin> getAllSkins() {
+        return getSkins(null, null, false);
+    }
+
+    List<String> getGroupNames(MPlayer user, boolean excludeNoRandom);
+
+    default List<String> getAllGroupNames(MPlayer user, boolean excludeNoRandom) {
+        return getGroupNames(user, excludeNoRandom);
+    }
 
     void loadSkins(ConfigSection sec);
 

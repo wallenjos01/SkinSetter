@@ -86,15 +86,20 @@ public final class SkinUtil {
 
     public final List<String> getSkinNames(MPlayer player) {
 
-        return reg.getSkinNames(player);
+        return reg.getSkinNames(player, null, false);
     }
 
-    public final SavedSkin getRandomSkin(MPlayer player) {
+    public final SavedSkin getRandomSkin(MPlayer player, String group) {
 
-        List<SavedSkin> sks = reg.getRandomSkins(player);
+        List<SavedSkin> sks = reg.getSkins(player, group, true);
         if(sks.size() == 0) return null;
 
         return sks.get(random.nextInt(sks.size()));
+    }
+
+    public final List<String> getGroupNames(MPlayer player, boolean random) {
+
+        return reg.getGroupNames(player, random);
     }
 
     public final void saveSkin(MPlayer player, String name) {
@@ -173,9 +178,14 @@ public final class SkinUtil {
         try {
             AbstractInventoryGUI gui = MidnightCoreAPI.getInstance().createInventoryGUI(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.set.title", player));
 
-            List<SavedSkin> skins = reg.getSkins(perms);
+            List<SavedSkin> skins = reg.getSkins(perms, null, false);
 
-            int pages = skins.size() < 55 ? 1 : (skins.size() / 45) + 1;
+
+            int pages = 1;
+            if(skins.size() > 55) {
+                pages = skins.size() / 45;
+                if(skins.size() % 45 != 0) pages += 1;
+            }
 
             MItemStack nextPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("lime_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.next_page", player)).build();
             MItemStack prevPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("red_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.prev_page", player)).build();

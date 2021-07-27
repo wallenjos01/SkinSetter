@@ -42,7 +42,11 @@ public class SkinSetterAPI {
             config.save();
         }
 
-        langProvider = MidnightCoreAPI.getInstance().getModule(ILangModule.class).createLangProvider(new File(configFolder, "lang"), configProvider, defaultLang);
+        ILangModule module = MidnightCoreAPI.getInstance().getModule(ILangModule.class);
+        SavedSkin.registerPlaceholders(module);
+
+        langProvider = module.createLangProvider(new File(configFolder, "lang"), configProvider, defaultLang);
+
 
         this.registry = registry;
 

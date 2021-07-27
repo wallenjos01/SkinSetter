@@ -3,6 +3,8 @@ package me.m1dnightninja.skinsetter.api;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.api.config.ConfigSerializer;
 import me.m1dnightninja.midnightcore.api.inventory.MItemStack;
+import me.m1dnightninja.midnightcore.api.module.lang.ILangModule;
+import me.m1dnightninja.midnightcore.api.module.lang.PlaceholderSupplier;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
@@ -11,6 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SavedSkin {
+
+    public static void registerPlaceholders(ILangModule module) {
+
+        module.registerInlinePlaceholderSupplier("skinsetter_skin_id", PlaceholderSupplier.create(SavedSkin.class, SavedSkin::getId));
+        module.registerPlaceholderSupplier("skinsetter_skin_name", PlaceholderSupplier.create(SavedSkin.class, SavedSkin::getName));
+
+    }
 
     private final String id;
     private final Skin skin;
@@ -60,15 +69,32 @@ public class SavedSkin {
         return groups;
     }
 
+    public void addGroup(String s) {
+
+        if(!groups.contains(s)) {
+            groups.add(s);
+        }
+    }
+
     public void setName(MComponent name) {
         if(name == null) {
             this.name = MComponent.createTextComponent(id);
         } else {
             this.name = name;
         }
+
+        if(!customItem) cachedItem = null;
     }
 
+    public void setCustomItem(MItemStack newItem) {
 
+        this.customItem = newItem != null;
+        this.cachedItem = newItem;
+    }
+
+    public void setInRandom(boolean inRandom) {
+        this.inRandom = inRandom;
+    }
 
     public boolean canUse(MPlayer player) {
 

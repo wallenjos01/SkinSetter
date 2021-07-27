@@ -1,18 +1,22 @@
 package me.m1dnightninja.skinsetter.fabric;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.sun.jdi.connect.Connector;
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
+import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholder;
 import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
 import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
+import me.m1dnightninja.midnightcore.fabric.inventory.FabricItem;
 import me.m1dnightninja.midnightcore.fabric.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.fabric.player.FabricPlayer;
 import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
@@ -25,8 +29,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -119,7 +125,75 @@ public class SkinCommand {
             .then(Commands.literal("setrandom")
                 .requires(stack -> hasPermission(stack, "skinsetter.command.setrandom"))
                 .then(Commands.argument("players", EntityArgument.players())
-                    .executes(context -> executeSetRandom(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource())))
+                    .executes(context -> executeSetRandom(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), null))
+                    .then(Commands.argument("group", StringArgumentType.word())
+                        .suggests((context, builder) -> {
+                            MPlayer player = null;
+                            try {
+                                player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                            } catch (CommandSyntaxException ex) {
+                                // Ignore
+                            }
+                            return SharedSuggestionProvider.suggest(util.getGroupNames(player, true), builder);
+                        })
+                        .executes(context -> executeSetRandom(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("group", String.class)))
+                    )
+                )
+            )
+            .then(Commands.literal("edit")
+                .requires(stack -> PermissionHelper.checkOrOp(stack, "skinsetter.command.edit", 2))
+                .then(Commands.argument("skin", StringArgumentType.word())
+                    .suggests(((context, builder) -> {
+
+                        MPlayer player = null;
+                        try {
+                            player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                        } catch (CommandSyntaxException ex) {
+                            // Ignore
+                        }
+                        return SharedSuggestionProvider.suggest(util.getSkinNames(player), builder);
+                    }))
+                    .then(Commands.literal("name")
+                        .then(Commands.argument("name", StringArgumentType.greedyString())
+                            .executes(context -> executeEditName(context, context.getArgument("skin", String.class), context.getArgument("name", String.class)))
+                        )
+                    )
+                    .then(Commands.literal("groups")
+                        .then(Commands.literal("add")
+                            .then(Commands.argument("group", StringArgumentType.word())
+                                .executes(context -> executeEditAddGroup(context, context.getArgument("skin", String.class), context.getArgument("group", String.class)))
+                            )
+                        )
+                        .then(Commands.literal("remove")
+                            .then(Commands.argument("group", StringArgumentType.word())
+                                .suggests((context, builder) -> {
+
+                                    SavedSkin skin = util.getSavedSkin(context.getArgument("skin", String.class));
+                                    if(skin != null) return SharedSuggestionProvider.suggest(skin.getGroups(), builder);
+
+                                    return null;
+                                })
+                                .executes(context -> executeEditRemoveGroup(context, context.getArgument("skin", String.class), context.getArgument("group", String.class)))
+                            )
+                        )
+                    )
+                    .then(Commands.literal("item")
+                        .then(Commands.literal("save")
+                            .executes(context -> executeEditSaveItem(context, context.getArgument("skin", String.class), context.getSource().getPlayerOrException().getMainHandItem()))
+                            .then(Commands.argument("item", ItemArgument.item())
+                                .executes(context -> executeEditSaveItem(context, context.getArgument("skin", String.class), context.getArgument("item", ItemStack.class)))
+                            )
+                        )
+                        .then(Commands.literal("clear")
+                            .executes(context -> executeEditClearItem(context, context.getArgument("skin", String.class)))
+
+                        )
+                    )
+                    .then(Commands.literal("excludeInRandom")
+                        .then(Commands.argument("exclude", BoolArgumentType.bool())
+                            .executes(context -> executeEditExcludeInRandom(context, context.getArgument("skin", String.class), context.getArgument("exclude", Boolean.class)))
+                        )
+                    )
                 )
             );
 
@@ -293,7 +367,7 @@ public class SkinCommand {
         SkinSetterAPI.getInstance().getConfig().set("default_skin", skinId);
         SkinSetterAPI.getInstance().saveConfig();
 
-        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.setdefault.result", new CustomPlaceholderInline("id", skinId));
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.setdefault.result", skin, new CustomPlaceholderInline("id", skinId));
 
         return 1;
     }
@@ -351,7 +425,7 @@ public class SkinCommand {
 
     }
 
-    private int executeSetRandom(CommandContext<CommandSourceStack> context, List<ServerPlayer> players) {
+    private int executeSetRandom(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String group) {
 
         MPlayer mpl = null;
         if(context.getSource().getEntity() != null) {
@@ -364,7 +438,7 @@ public class SkinCommand {
 
         for(ServerPlayer pl : players) {
 
-            SavedSkin s = util.getRandomSkin(mpl);
+            SavedSkin s = util.getRandomSkin(mpl, group);
             if(s == null) {
 
                 LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_saved");
@@ -377,6 +451,102 @@ public class SkinCommand {
         sendFeedback(context, players.size() == 1 ? "command.set.result.single" : "command.set.result.multiple", new CustomPlaceholderInline("count", players.size()+""), FabricPlayer.wrap(players.get(0)));
 
         return players.size();
+    }
+
+    private int executeEditExcludeInRandom(CommandContext<CommandSourceStack> context, String skin, Boolean exclude) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        s.setInRandom(exclude);
+
+        String key = exclude ? "command.edit.excludeInRandom.result.enabled" : "command.edit.excludeInRandom.result.disabled";
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, key);
+
+        return 1;
+    }
+
+    private int executeEditClearItem(CommandContext<CommandSourceStack> context, String skin) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        s.setCustomItem(null);
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.item.clear.result", s);
+
+        return 1;
+    }
+
+    private int executeEditSaveItem(CommandContext<CommandSourceStack> context, String skin, ItemStack is) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        if(is == null || is.isEmpty()) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_item");
+            return 0;
+        }
+
+        s.setCustomItem(new FabricItem(is));
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.item.save.result", s);
+
+        return 1;
+
+    }
+
+    private int executeEditRemoveGroup(CommandContext<CommandSourceStack> context, String skin, String group) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        s.getGroups().remove(group);
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.groups.result", s);
+
+        return 1;
+
+    }
+
+    private int executeEditAddGroup(CommandContext<CommandSourceStack> context, String skin, String group) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        s.addGroup(group);
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.groups.result", s);
+
+        return 1;
+
+    }
+
+    private int executeEditName(CommandContext<CommandSourceStack> context, String skin, String name) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        MComponent newName = MComponent.Serializer.parse(name);
+        s.setName(newName);
+
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.name.result", s);
+
+        return 1;
     }
 
     private void sendFeedback(CommandContext<CommandSourceStack> context, String key, Object... args) {

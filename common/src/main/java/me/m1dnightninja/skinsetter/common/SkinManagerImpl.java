@@ -38,64 +38,57 @@ public class SkinManagerImpl implements SkinManager {
         skins.put(id, s);
     }
 
-    private List<String> getSkinNames(MPlayer player, boolean random) {
+    @Override
+    public List<String> getSkinNames(MPlayer user, String group, boolean excludeNoRandom) {
 
         List<String> out = new ArrayList<>();
-        for(SavedSkin sk : skins.values()) {
 
-            if(player != null && !sk.canUse(player)) continue;
-            if(random && sk.excludedFromRandom()) continue;
+        for(SavedSkin s : skins.values()) {
+            if(user != null && !s.canUse(user)) continue;
+            if(group != null && !s.getGroups().contains(group)) continue;
+            if(excludeNoRandom && s.excludedFromRandom()) continue;
 
-            out.add(sk.getId());
-
+            out.add(s.getId());
         }
 
-        if(hasIsPresent) for(String skn : HideAndSeekIntegration.getSkinNames()) {
-            if(player != null && !(player.hasPermission("hideandseek.skin." + skn) || player.hasPermission("skinsetter.group.hideandseek"))) {
-                out.add(skn);
+        return out;
+    }
+
+    @Override
+    public List<SavedSkin> getSkins(MPlayer user, String group, boolean excludeNoRandom) {
+
+        List<SavedSkin> out = new ArrayList<>();
+
+        for(SavedSkin s : skins.values()) {
+            if(user != null && !s.canUse(user)) continue;
+            if(group != null && !s.getGroups().contains(group)) continue;
+            if(excludeNoRandom && s.excludedFromRandom()) continue;
+
+            out.add(s);
+        }
+
+        return out;
+    }
+
+    @Override
+    public List<String> getGroupNames(MPlayer user, boolean excludeNoRandom) {
+
+        List<String> out = new ArrayList<>();
+
+        for(SavedSkin s : skins.values()) {
+
+            if(user != null && !s.canUse(user)) continue;
+            if(excludeNoRandom && s.excludedFromRandom()) continue;
+
+            for(String group : s.getGroups()) {
+                if(out.contains(group)) continue;
+
+                out.add(group);
             }
         }
 
         return out;
     }
-
-    private List<SavedSkin> getSkins(MPlayer player, boolean random) {
-
-        List<SavedSkin> out = new ArrayList<>();
-        for(SavedSkin sk : skins.values()) {
-
-            if(player != null && !sk.canUse(player)) continue;
-            if(random && sk.excludedFromRandom()) continue;
-
-            out.add(sk);
-
-        }
-
-        if(hasIsPresent) for(SavedSkin skn : HideAndSeekIntegration.getSkins()) {
-            if(skn.canUse(player)) out.add(skn);
-        }
-
-        return out;
-    }
-
-    public final List<String> getSkinNames(MPlayer player) {
-        return getSkinNames(player, false);
-    }
-
-    public final List<String> getRandomSkinNames(MPlayer player) {
-        return getSkinNames(player, true);
-    }
-
-    @Override
-    public List<SavedSkin> getSkins(MPlayer user) {
-        return getSkins(user, false);
-    }
-
-    @Override
-    public List<SavedSkin> getRandomSkins(MPlayer user) {
-        return getSkins(user, true);
-    }
-
 
     public void loadSkins(ConfigSection sec) {
 
