@@ -2,6 +2,7 @@ name: '${modname}'
 version: '${version}'
 main: 'me.m1dnightninja.${modid}.spigot.${modclass}'
 author: 'M1dnight_Ninja'
+api-version: 1.13
 depend:
 - MidnightCore
 commands:

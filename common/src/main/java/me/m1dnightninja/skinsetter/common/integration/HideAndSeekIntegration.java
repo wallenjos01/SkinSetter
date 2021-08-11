@@ -12,7 +12,9 @@ public class HideAndSeekIntegration {
 
     public static me.m1dnightninja.skinsetter.api.SavedSkin getSkin(String id) {
 
-        me.m1dnightninja.hideandseek.api.game.SavedSkin opt = HideAndSeekAPI.getInstance().getRegistry().getSkin(id);
+        if(HideAndSeekAPI.getInstance() == null) return null; // Not loaded yet.
+
+        me.m1dnightninja.hideandseek.api.game.SavedSkin opt = HideAndSeekAPI.getInstance().getGameRegistry().getSkin(id);
         if(opt == null) return null;
 
         me.m1dnightninja.skinsetter.api.SavedSkin out = new me.m1dnightninja.skinsetter.api.SavedSkin(opt.getId(), opt.getSkin()) {
@@ -29,8 +31,10 @@ public class HideAndSeekIntegration {
 
     public static List<me.m1dnightninja.skinsetter.api.SavedSkin> getSkins() {
 
+        if(HideAndSeekAPI.getInstance() == null) return null; // Not loaded yet.
+
         List<me.m1dnightninja.skinsetter.api.SavedSkin> out = new ArrayList<>();
-        for(SavedSkin opt : HideAndSeekAPI.getInstance().getRegistry().getSkins()) {
+        for(SavedSkin opt : HideAndSeekAPI.getInstance().getGameRegistry().getSkins()) {
             out.add(getSkin(opt.getId()));
         }
         return out;
@@ -39,8 +43,10 @@ public class HideAndSeekIntegration {
 
     public static List<String> getSkinNames() {
 
+        if(HideAndSeekAPI.getInstance() == null) return null; // Not loaded yet.
+
         List<String> out = new ArrayList<>();
-        for(SavedSkin opt : HideAndSeekAPI.getInstance().getRegistry().getSkins()) {
+        for(SavedSkin opt : HideAndSeekAPI.getInstance().getGameRegistry().getSkins()) {
             out.add(opt.getId());
         }
         return out;

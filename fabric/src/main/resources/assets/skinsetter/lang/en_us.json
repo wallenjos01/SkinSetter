@@ -13,7 +13,7 @@
   "command.save.result": "&aSaved the skin of &f%player_name% as &f%skinsetter_skin_id%&a!",
   "command.reload.result": "&aSkinSetter reloaded in %time%ms",
   "command.setnpc.result": "&aChanged the skin of &f%npc_name%&a!",
-  "command.setdefault.result": "&aDefault skin set to in &f%skinsetter_skin_id%&a!",
+  "command.setdefault.result": "&aDefault skin set to &f%skinsetter_skin_id%&a!",
   "command.cleardefault.result": "&aDefault skin cleared!",
   "command.persistence.result.enabled": "&aPersistent skins enabled!",
   "command.persistence.result.disabled": "&aPersistent skins disabled!",
@@ -23,6 +23,7 @@
   "command.edit.excludeInRandom.result.disabled": "&aSkin %skinsetter_skin_id% will once again appear in random selections!",
   "command.edit.excludeInRandom.result.enabled": "&aSkin %skinsetter_skin_id% will no longer appear in random selections!",
   "command.edit.groups.result": "&aSkin groups updated!",
+  "command.head.result": "&aGenerated a player head for %skinsetter_skin_name%&a!",
   "gui.set.title": "Select a Skin",
   "gui.next_page": "&aNext",
   "gui.prev_page": "&cBack"

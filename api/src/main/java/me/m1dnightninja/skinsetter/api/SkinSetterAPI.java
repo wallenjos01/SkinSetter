@@ -1,104 +1,92 @@
 package me.m1dnightninja.skinsetter.api;
 
-import me.m1dnightninja.midnightcore.api.ILogger;
-import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
-import me.m1dnightninja.midnightcore.api.config.ConfigProvider;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
-import me.m1dnightninja.midnightcore.api.config.FileConfig;
-import me.m1dnightninja.midnightcore.api.module.lang.ILangModule;
 import me.m1dnightninja.midnightcore.api.module.lang.ILangProvider;
+import me.m1dnightninja.skinsetter.api.core.SkinManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
+public abstract class SkinSetterAPI {
 
-public class SkinSetterAPI {
+    protected static SkinSetterAPI INSTANCE;
+    protected static Logger LOGGER = LogManager.getLogger("SkinSetter");
 
-    private static SkinSetterAPI INSTANCE;
-    private static ILogger LOGGER;
+    /**
+     * Retrieves the Config Section loaded from config.json / config.yml
+     *
+     * @return The main config as a ConfigSection
+     */
+    public abstract ConfigSection getConfig();
 
-    private final SkinManager registry;
-    private final FileConfig config;
+    /**
+     * Retrieves the Lang Provider associated with the mod
+     *
+     * @return The LangProvider object
+     */
+    public abstract ILangProvider getLangProvider();
 
-    public boolean PERSISTENT_SKINS;
-    public SavedSkin DEFAULT_SKIN;
+    /**
+     * Retrieves the global Skin Manager object
+     *
+     * @return The SkinManager object
+     */
+    public abstract SkinManager getSkinManager();
 
-    private final ConfigSection defaultConfig;
-    private final ILangProvider langProvider;
+    /**
+     * Saves the main ConfigSection to the disk
+     */
+    public abstract void saveConfig();
 
-    public SkinSetterAPI(ILogger logger, File configFolder, ConfigSection defaultLang, ConfigSection defaultConfig, SkinManager registry) {
+    /**
+     * Reloads the main ConfigSection from the disk
+     */
+    public abstract void reloadConfig();
 
-        if(INSTANCE == null) {
-            INSTANCE = this;
-            LOGGER = logger;
-        }
+    /**
+     * Queries whether skin persistence is enabled
+     *
+     * @return Whether persistence is enabled, represented as a boolean
+     */
+    public abstract boolean isPersistenceEnabled();
 
-        MidnightCoreAPI.getConfigRegistry().registerSerializer(SavedSkin.class, SavedSkin.SERIALIZER);
-        ConfigProvider configProvider = MidnightCoreAPI.getInstance().getDefaultConfigProvider();
+    /**
+     * Enables or disables skin persistence
+     *
+     * @param persist Whether to enable or disable persistence
+     */
+    public abstract void setPersistenceEnabled(boolean persist);
 
-        File skinFile = new File(configFolder, "config" + configProvider.getFileExtension());
-        this.config = new FileConfig(skinFile, configProvider);
-        this.defaultConfig = defaultConfig;
+    /**
+     * Retrieves the default skin
+     *
+     * @return The default skin as a SavedSkin
+     */
+    @Nullable
+    public abstract SavedSkin getDefaultSkin();
 
-        if(!skinFile.exists()) {
-            config.save();
-        }
+    /**
+     * Changes the default skin
+     *
+     * @param skin The new default skin, as a SavedSkin
+     */
+    public abstract void setDefaultSkin(@Nullable SavedSkin skin);
 
-        ILangModule module = MidnightCoreAPI.getInstance().getModule(ILangModule.class);
-        SavedSkin.registerPlaceholders(module);
-
-        langProvider = module.createLangProvider(new File(configFolder, "lang"), configProvider, defaultLang);
-
-
-        this.registry = registry;
-
-        registry.init();
-
-        reloadConfig();
-        saveConfig();
-    }
-
-    public ConfigSection getConfig() {
-        return config.getRoot();
-    }
-
-    public ILangProvider getLangProvider() {
-        return langProvider;
-    }
-
-    public SkinManager getSkinRegistry() {
-        return registry;
-    }
-
-    public void saveConfig() {
-
-        config.save();
-    }
-
-    public void reloadConfig() {
-
-        config.reload();
-        config.getRoot().fill(defaultConfig);
-        config.save();
-
-        if(!config.getRoot().has("persistent_skins", Boolean.class)) {
-            config.getRoot().set("persistent_skins", false);
-        }
-        if(!config.getRoot().has("default_skin")) {
-            config.getRoot().set("default_skin", "");
-        }
-
-        registry.loadSkins(config.getRoot());
-
-        PERSISTENT_SKINS = config.getRoot().getBoolean("persistent_skins");
-        DEFAULT_SKIN = registry.getSkin(config.getRoot().getString("default_skin"));
-
-        langProvider.reloadAllEntries();
-    }
-
+    /**
+     * Returns the first created instance of the API (Usually by the mod itself)
+     *
+     * @return The SkinSetterAPI object
+     */
     public static SkinSetterAPI getInstance() {
         return INSTANCE;
     }
 
-    public static ILogger getLogger() {
+    /**
+     * Returns the single logger associated with the mod
+     *
+     * @return The Logger object
+     */
+    public static Logger getLogger() {
         return LOGGER;
     }
 

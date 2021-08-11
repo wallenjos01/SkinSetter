@@ -1,10 +1,11 @@
-package me.m1dnightninja.skinsetter.common;
+package me.m1dnightninja.skinsetter.common.util;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
-import me.m1dnightninja.midnightcore.api.inventory.AbstractInventoryGUI;
+import me.m1dnightninja.midnightcore.api.inventory.MInventoryGUI;
 import me.m1dnightninja.midnightcore.api.inventory.MItemStack;
-import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
+import me.m1dnightninja.midnightcore.api.module.playerdata.IPlayerDataModule;
+import me.m1dnightninja.midnightcore.api.module.playerdata.IPlayerDataProvider;
 import me.m1dnightninja.midnightcore.api.module.skin.ISkinModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.module.skin.SkinCallback;
@@ -12,7 +13,7 @@ import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.registry.MIdentifier;
 import me.m1dnightninja.midnightcore.common.util.MojangUtil;
 import me.m1dnightninja.skinsetter.api.SavedSkin;
-import me.m1dnightninja.skinsetter.api.SkinManager;
+import me.m1dnightninja.skinsetter.api.core.SkinManager;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 
 import java.util.*;
@@ -20,7 +21,7 @@ import java.util.*;
 public final class SkinUtil {
 
     private final ISkinModule skinModule;
-    private final IPlayerDataModule dataModule;
+    private final IPlayerDataProvider dataProvider;
     private final SkinManager reg;
 
     private final Random random;
@@ -29,17 +30,17 @@ public final class SkinUtil {
 
     public SkinUtil() {
         skinModule = MidnightCoreAPI.getInstance().getModule(ISkinModule.class);
-        dataModule = MidnightCoreAPI.getInstance().getModule(IPlayerDataModule.class);
+        dataProvider = MidnightCoreAPI.getInstance().getModule(IPlayerDataModule.class).getGlobalProvider();
 
         if(skinModule == null) {
             SkinSetterAPI.getLogger().warn("Unable to load Skin Module!");
         }
 
         this.random = new Random();
-        this.reg = SkinSetterAPI.getInstance().getSkinRegistry();
+        this.reg = SkinSetterAPI.getInstance().getSkinManager();
     }
 
-    public final void setSkin(MPlayer player, Skin skin) {
+    public void setSkin(MPlayer player, Skin skin) {
 
         skins.put(player, skin);
 
@@ -47,7 +48,7 @@ public final class SkinUtil {
         skinModule.updateSkin(player);
     }
 
-    public final void resetSkin(MPlayer player) {
+    public void resetSkin(MPlayer player) {
 
         skins.remove(player);
 
@@ -55,7 +56,7 @@ public final class SkinUtil {
         skinModule.updateSkin(player);
     }
 
-    public final Skin getSkin(MPlayer player) {
+    public Skin getSkin(MPlayer player) {
 
         if(!player.isOffline()) {
             return skinModule.getSkin(player);
@@ -64,7 +65,7 @@ public final class SkinUtil {
         return null;
     }
 
-    public final Skin getLoginSkin(MPlayer player) {
+    public Skin getLoginSkin(MPlayer player) {
 
         if(!player.isOffline()) {
             return skinModule.getOriginalSkin(player);
@@ -80,16 +81,16 @@ public final class SkinUtil {
         }).start();
     }
 
-    public final SavedSkin getSavedSkin(String id) {
+    public SavedSkin getSavedSkin(String id) {
         return reg.getSkin(id);
     }
 
-    public final List<String> getSkinNames(MPlayer player) {
+    public List<String> getSkinNames(MPlayer player) {
 
         return reg.getSkinNames(player, null, false);
     }
 
-    public final SavedSkin getRandomSkin(MPlayer player, String group) {
+    public SavedSkin getRandomSkin(MPlayer player, String group) {
 
         List<SavedSkin> sks = reg.getSkins(player, group, true);
         if(sks.size() == 0) return null;
@@ -97,12 +98,12 @@ public final class SkinUtil {
         return sks.get(random.nextInt(sks.size()));
     }
 
-    public final List<String> getGroupNames(MPlayer player, boolean random) {
+    public List<String> getGroupNames(MPlayer player, boolean random) {
 
         return reg.getGroupNames(player, random);
     }
 
-    public final void saveSkin(MPlayer player, String name) {
+    public void saveSkin(MPlayer player, String name) {
 
         if(player.isOffline()) return;
 
@@ -110,21 +111,21 @@ public final class SkinUtil {
         reg.saveSkin(new SavedSkin(name, s), name);
     }
 
-    public final void saveSkins() {
+    public void saveSkins() {
 
         reg.saveSkins(SkinSetterAPI.getInstance().getConfig());
         SkinSetterAPI.getInstance().saveConfig();
     }
 
-    public final void reloadSkins() {
+    public void reloadSkins() {
         reg.loadSkins(SkinSetterAPI.getInstance().getConfig());
     }
 
-    public final void applyLoginSkin(MPlayer u) {
+    public void applyLoginSkin(MPlayer u) {
 
-        if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
+        if(SkinSetterAPI.getInstance().isPersistenceEnabled()) {
 
-            ConfigSection data = dataModule.getPlayerData(u.getUUID());
+            ConfigSection data = dataProvider.getPlayerData(u.getUUID());
 
             if (data != null && data.has("skinsetter", ConfigSection.class)) {
 
@@ -147,36 +148,36 @@ public final class SkinUtil {
             }
         }
 
-        if(SkinSetterAPI.getInstance().DEFAULT_SKIN != null) {
-            setSkin(u, SkinSetterAPI.getInstance().DEFAULT_SKIN.getSkin());
+        if(SkinSetterAPI.getInstance().getDefaultSkin() != null) {
+            setSkin(u, SkinSetterAPI.getInstance().getDefaultSkin().getSkin());
         }
     }
 
-    public final void savePersistentSkin(MPlayer u) {
+    public void savePersistentSkin(MPlayer u) {
 
-        if(SkinSetterAPI.getInstance().PERSISTENT_SKINS) {
+        if(SkinSetterAPI.getInstance().isPersistenceEnabled()) {
 
-            if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().DEFAULT_SKIN.getSkin())) {
+            if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().getDefaultSkin().getSkin())) {
 
-                dataModule.getPlayerData(u.getUUID()).set("skinsetter", null);
+                dataProvider.getPlayerData(u.getUUID()).set("skinsetter", null);
 
             } else {
 
                 Skin s = skins.get(u);
 
-                dataModule.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", s);
+                dataProvider.getPlayerData(u.getUUID()).getOrCreateSection("skinsetter").set("skin", s);
 
             }
-            dataModule.savePlayerData(u.getUUID());
+            dataProvider.savePlayerData(u.getUUID());
         }
 
         skins.remove(u);
     }
 
-    public final void openGUI(MPlayer player, MPlayer perms) {
+    public void openGUI(MPlayer player, MPlayer perms) {
 
         try {
-            AbstractInventoryGUI gui = MidnightCoreAPI.getInstance().createInventoryGUI(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.set.title", player));
+            MInventoryGUI gui = MidnightCoreAPI.getInstance().createInventoryGUI(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.set.title", player));
 
             List<SavedSkin> skins = reg.getSkins(perms, null, false);
 
@@ -190,8 +191,8 @@ public final class SkinUtil {
             MItemStack nextPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("lime_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.next_page", player)).build();
             MItemStack prevPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("red_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.prev_page", player)).build();
 
-            AbstractInventoryGUI.ClickAction next = (type, user) -> gui.open(user, gui.getPlayerPage(user) + 1);
-            AbstractInventoryGUI.ClickAction prev = (type, user) -> gui.open(user, gui.getPlayerPage(user) - 1);
+            MInventoryGUI.ClickAction next = (type, user) -> gui.open(user, gui.getPlayerPage(user) + 1);
+            MInventoryGUI.ClickAction prev = (type, user) -> gui.open(user, gui.getPlayerPage(user) - 1);
 
             if (pages > 1) {
                 for (int i = 0; i < pages; i++) {

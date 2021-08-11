@@ -65,6 +65,11 @@ public class SavedSkin {
         return cachedItem;
     }
 
+    public MItemStack getHeadItem() {
+
+        return customItem ? MItemStack.Builder.headWithSkin(skin).withName(getName()).build() : getItemStack();
+    }
+
     public List<String> getGroups() {
         return groups;
     }

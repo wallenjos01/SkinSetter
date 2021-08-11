@@ -6,23 +6,22 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.sun.jdi.connect.Connector;
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
-import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
-import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholder;
+import me.m1dnightninja.midnightcore.api.inventory.MItemStack;
 import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
+import me.m1dnightninja.midnightcore.api.module.playerdata.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.midnightcore.fabric.MidnightCore;
-import me.m1dnightninja.midnightcore.fabric.api.PermissionHelper;
 import me.m1dnightninja.midnightcore.fabric.inventory.FabricItem;
 import me.m1dnightninja.midnightcore.fabric.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.fabric.player.FabricPlayer;
 import me.m1dnightninja.midnightcore.fabric.util.ConversionUtil;
+import me.m1dnightninja.midnightcore.fabric.util.PermissionUtil;
 import me.m1dnightninja.skinsetter.api.SavedSkin;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
-import me.m1dnightninja.skinsetter.common.SkinUtil;
+import me.m1dnightninja.skinsetter.common.util.SkinUtil;
 import me.m1dnightninja.skinsetter.fabric.integragion.TaterzensIntegration;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.commands.CommandSourceStack;
@@ -141,7 +140,7 @@ public class SkinCommand {
                 )
             )
             .then(Commands.literal("edit")
-                .requires(stack -> PermissionHelper.checkOrOp(stack, "skinsetter.command.edit", 2))
+                .requires(stack -> PermissionUtil.checkOrOp(stack, "skinsetter.command.edit", 2))
                 .then(Commands.argument("skin", StringArgumentType.word())
                     .suggests(((context, builder) -> {
 
@@ -195,6 +194,23 @@ public class SkinCommand {
                         )
                     )
                 )
+            )
+            .then(Commands.literal("head")
+                .requires(context -> PermissionUtil.checkOrOp(context, "skinsetter.command.head", 2))
+                .then(Commands.argument("skin", StringArgumentType.word())
+                    .suggests(((context, builder) -> {
+                        MPlayer player = null;
+                        try {
+                            player = FabricPlayer.wrap(context.getSource().getPlayerOrException());
+                        } catch (CommandSyntaxException ex) {
+                            // Ignore
+                        }
+                        return SharedSuggestionProvider.suggest(util.getSkinNames(player), builder);
+                    }))
+                    .then(Commands.argument("players", EntityArgument.players())
+                        .executes(context -> executeGiveHead(context, context.getArgument("players", EntitySelector.class).findPlayers(context.getSource()), context.getArgument("skin", String.class)))
+                    )
+                )
             );
 
         if(TATERZENS_LOADED) {
@@ -220,7 +236,7 @@ public class SkinCommand {
     }
 
     private boolean hasPermission(CommandSourceStack st, String perm) {
-        return st.hasPermission(2) || PermissionHelper.check(st, perm);
+        return PermissionUtil.checkOrOp(st, perm, 2);
     }
 
     private int executeSet(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin, boolean online) {
@@ -356,14 +372,14 @@ public class SkinCommand {
 
     private int executeSetDefault(CommandContext<CommandSourceStack> context, String skinId) {
 
-        SavedSkin skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(skinId);
+        SavedSkin skin = SkinSetterAPI.getInstance().getSkinManager().getSkin(skinId);
 
         if(skin == null) {
             LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
-        SkinSetterAPI.getInstance().DEFAULT_SKIN = skin;
+        SkinSetterAPI.getInstance().setDefaultSkin(skin);
         SkinSetterAPI.getInstance().getConfig().set("default_skin", skinId);
         SkinSetterAPI.getInstance().saveConfig();
 
@@ -374,7 +390,7 @@ public class SkinCommand {
 
     private int executeClearDefault(CommandContext<CommandSourceStack> context) {
 
-        SkinSetterAPI.getInstance().DEFAULT_SKIN = null;
+        SkinSetterAPI.getInstance().setDefaultSkin(null);
         SkinSetterAPI.getInstance().getConfig().set("default_skin", "");
         SkinSetterAPI.getInstance().saveConfig();
 
@@ -385,7 +401,7 @@ public class SkinCommand {
 
     private int executePersistenceEnable(CommandContext<CommandSourceStack> context) {
 
-        SkinSetterAPI.getInstance().PERSISTENT_SKINS = true;
+        SkinSetterAPI.getInstance().setPersistenceEnabled(true);
         SkinSetterAPI.getInstance().getConfig().set("persistent_skins", true);
         SkinSetterAPI.getInstance().saveConfig();
 
@@ -396,7 +412,7 @@ public class SkinCommand {
 
     private int executePersistenceDisable(CommandContext<CommandSourceStack> context) {
 
-        SkinSetterAPI.getInstance().PERSISTENT_SKINS = false;
+        SkinSetterAPI.getInstance().setPersistenceEnabled(false);
         SkinSetterAPI.getInstance().getConfig().set("persistent_skins", false);
         SkinSetterAPI.getInstance().saveConfig();
 
@@ -406,8 +422,8 @@ public class SkinCommand {
 
         for(MPlayer pl : MidnightCoreAPI.getInstance().getPlayerManager()) {
 
-            dataModule.getPlayerData(pl.getUUID()).set("skinsetter", null);
-            dataModule.savePlayerData(pl.getUUID());
+            dataModule.getGlobalProvider().getPlayerData(pl.getUUID()).set("skinsetter", null);
+            dataModule.getGlobalProvider().savePlayerData(pl.getUUID());
         }
 
         return 1;
@@ -547,6 +563,24 @@ public class SkinCommand {
         LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.name.result", s);
 
         return 1;
+    }
+
+    private int executeGiveHead(CommandContext<CommandSourceStack> context, List<ServerPlayer> players, String skin) {
+
+        SavedSkin s = util.getSavedSkin(skin);
+        if(s == null) {
+            LangModule.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            return 0;
+        }
+
+        MItemStack is = s.getHeadItem();
+        for(ServerPlayer pl : players) {
+            pl.addItem(((FabricItem) is).getMinecraftItem());
+        }
+
+        LangModule.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.head.result", s);
+
+        return players.size();
     }
 
     private void sendFeedback(CommandContext<CommandSourceStack> context, String key, Object... args) {

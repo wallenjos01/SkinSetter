@@ -1,7 +1,7 @@
 package me.m1dnightninja.skinsetter.spigot;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
-import me.m1dnightninja.skinsetter.common.SkinUtil;
+import me.m1dnightninja.skinsetter.common.util.SkinUtil;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;

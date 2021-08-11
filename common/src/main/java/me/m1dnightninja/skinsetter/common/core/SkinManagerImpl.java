@@ -1,10 +1,10 @@
-package me.m1dnightninja.skinsetter.common;
+package me.m1dnightninja.skinsetter.common.core;
 
 import com.google.gson.internal.LinkedTreeMap;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.skinsetter.api.SavedSkin;
-import me.m1dnightninja.skinsetter.api.SkinManager;
+import me.m1dnightninja.skinsetter.api.core.SkinManager;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
 import me.m1dnightninja.skinsetter.common.integration.HideAndSeekIntegration;
 

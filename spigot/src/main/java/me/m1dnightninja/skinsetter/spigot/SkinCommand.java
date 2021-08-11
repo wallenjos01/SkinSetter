@@ -2,8 +2,8 @@ package me.m1dnightninja.skinsetter.spigot;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.inventory.MItemStack;
-import me.m1dnightninja.midnightcore.api.module.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;
+import me.m1dnightninja.midnightcore.api.module.playerdata.IPlayerDataModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.registry.MIdentifier;
@@ -12,7 +12,7 @@ import me.m1dnightninja.midnightcore.spigot.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.spigot.player.SpigotPlayer;
 import me.m1dnightninja.skinsetter.api.SavedSkin;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
-import me.m1dnightninja.skinsetter.common.SkinUtil;
+import me.m1dnightninja.skinsetter.common.util.SkinUtil;
 import me.m1dnightninja.skinsetter.spigot.integration.CitizensIntegration;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -32,7 +32,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
     private final boolean CITIZENS_ENABLED;
     private final SkinUtil util;
 
-    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload", "setdefault", "cleardefault", "persistence", "setrandom", "edit");
+    private final List<String> subcommands = Arrays.asList("set", "reset", "save", "reload", "setdefault", "cleardefault", "persistence", "setrandom", "edit", "head");
 
     public SkinCommand(SkinUtil util) {
         this.util = util;
@@ -52,14 +52,24 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
         switch (args.length) {
             case 0:
             case 1:
+                // Only list subcommands the player can use
                 for(String str : subcommands) {
                     if(sender.hasPermission("skinstter.command." + str)) suggestions.add(str);
                 }
                 break;
+
             case 2:
-                if(args[0].equals("reload")) break;
+                // No options for reload or cleardefault
+                if(args[0].equals("reload") || args[0].equals("cleardefault")) break;
+
+                // Only list options for subcommands the player has
                 if(subcommands.contains(args[0]) && sender.hasPermission("skinsetter.command." + args[0])) {
-                    if ((CITIZENS_ENABLED && args[0].equals("setnpc")) || args[0].equals("setdefault") || args[0].equals("edit")) {
+
+                    // List skin names
+                    if ((CITIZENS_ENABLED && args[0].equals("setnpc")) ||
+                            args[0].equals("setdefault") ||
+                            args[0].equals("edit") ||
+                            args[0].equals("head")) {
 
                         MPlayer mpl = null;
                         if(sender instanceof Player) {
@@ -67,11 +77,13 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                         }
                         suggestions.addAll(util.getSkinNames(mpl));
 
+                    // Enable and disable
                     } else if(args[0].equals("persistence")) {
 
                         suggestions.add("enable");
                         suggestions.add("disable");
 
+                    // List player names
                     } else {
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             suggestions.add(p.getDisplayName());
@@ -79,45 +91,65 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     }
                 }
                 break;
+
             case 3:
                 switch (args[0]) {
-                    case "set": {
+                    case "set":
+                        // List players
                         MPlayer mpl = null;
                         if (sender instanceof Player) {
                             mpl = SpigotPlayer.wrap(((Player) sender));
                         }
                         suggestions.addAll(util.getSkinNames(mpl));
                         break;
-                    }
-                    case "setrandom": {
-                        MPlayer mpl = null;
+
+                    case "setrandom":
+                        // List skin groups
+                        mpl = null;
                         if (sender instanceof Player) {
                             mpl = SpigotPlayer.wrap(((Player) sender));
                         }
                         suggestions.addAll(util.getGroupNames(mpl, true));
                         break;
-                    }
+
                     case "edit":
+                        // Skin editing options
                         suggestions.add("item");
                         suggestions.add("name");
                         suggestions.add("groups");
                         suggestions.add("excludeInRandom");
                         break;
+
+                    case "head":
+                        for(Player p : Bukkit.getOnlinePlayers()) {
+                            suggestions.add(p.getName());
+                        }
+                        break;
                 }
                 break;
             case 4:
                 if(args[0].equals("set")) {
+                    // Set online flag
                     suggestions.add("-o");
+
                 } else if(args[0].equals("edit")) {
+
+                    // Skin editing options
                     switch (args[2]) {
+
+                        // Save and clear items
                         case "item":
                             suggestions.add("clear");
                             suggestions.add("save");
                             break;
+
+                        // Add and remove groups
                         case "groups":
                             suggestions.add("add");
                             suggestions.add("remove");
                             break;
+
+                        // Exclude in random selections
                         case "excludeInRandom":
                             suggestions.add("true");
                             suggestions.add("false");
@@ -128,11 +160,13 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
             case 5:
                 if(args[0].equals("edit") && args[2].equals("groups") && args[3].equals("remove")) {
 
+                    // List groups a skin has
                     SavedSkin skin = util.getSavedSkin(args[1]);
                     if(skin != null) suggestions.addAll(skin.getGroups());
                 }
         }
 
+        // Filter suggestions
         List<String> out = new ArrayList<>();
         for(String sug : suggestions) {
             if(sug.startsWith(args[args.length - 1])) {
@@ -146,22 +180,27 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@Nonnull CommandSender sender, @Nonnull Command command, @Nonnull String s, @Nonnull String[] args) {
 
+        // Check permissions
         if(!sender.hasPermission("skinsetter.command")) {
             LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
             return true;
         }
 
+        // Check usage
         if(args.length == 0) {
             sendArgs(sender);
             return true;
         }
 
+        // Check permissions for subcommand
         if(!sender.hasPermission("skinsetter.command." + args[0])) {
             LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
             return true;
         }
 
         switch(args[0]) {
+
+            // Set subcommand
             case "set":
 
                 if(args.length < 2) {
@@ -228,6 +267,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 break;
 
+            // Reset subcommand
             case "reset":
 
                 if(args.length != 2) {
@@ -249,6 +289,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 break;
 
+            // Save subcommand
             case "save":
 
                 if(args.length != 3) {
@@ -275,6 +316,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.save.result", mp, new CustomPlaceholderInline("id", id));
                 break;
 
+            // Set NPC subcommand
             case "setnpc":
 
                 if(!CITIZENS_ENABLED) {
@@ -300,6 +342,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 CitizensIntegration.setNPCSkin((Player) sender, skin).send(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(((Player) sender).getUniqueId()));
                 break;
 
+            // Reload subcommand
             case "reload":
 
                 long time = System.currentTimeMillis();
@@ -309,6 +352,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 break;
 
+            // Set default subcommand
             case "setdefault":
 
                 if(args.length != 2) {
@@ -317,14 +361,14 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 }
 
                 id = args[1];
-                saved = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(id);
+                saved = SkinSetterAPI.getInstance().getSkinManager().getSkin(id);
 
                 if(saved == null) {
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                     return true;
                 }
 
-                SkinSetterAPI.getInstance().DEFAULT_SKIN = saved;
+                SkinSetterAPI.getInstance().setDefaultSkin(saved);
                 SkinSetterAPI.getInstance().getConfig().set("default_skin", id);
                 SkinSetterAPI.getInstance().saveConfig();
 
@@ -332,9 +376,10 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 break;
 
+            // Clear default subcommand
             case "cleardefault":
 
-                SkinSetterAPI.getInstance().DEFAULT_SKIN = null;
+                SkinSetterAPI.getInstance().setDefaultSkin(null);
                 SkinSetterAPI.getInstance().getConfig().set("default_skin", "");
                 SkinSetterAPI.getInstance().saveConfig();
 
@@ -342,17 +387,18 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 break;
 
+            // Persistence subcommand
             case "persistence":
 
                 if(args.length != 2) {
-                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistance <enable/disable>"));
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistence <enable/disable>"));
                     return true;
                 }
 
                 String action = args[1];
                 if(action.equals("enable")) {
 
-                    SkinSetterAPI.getInstance().PERSISTENT_SKINS = true;
+                    SkinSetterAPI.getInstance().setPersistenceEnabled(true);
                     SkinSetterAPI.getInstance().getConfig().set("persistent_skins", true);
                     SkinSetterAPI.getInstance().saveConfig();
 
@@ -360,7 +406,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 } else if(action.equals("disable")) {
 
-                    SkinSetterAPI.getInstance().PERSISTENT_SKINS = false;
+                    SkinSetterAPI.getInstance().setPersistenceEnabled(false);
                     SkinSetterAPI.getInstance().getConfig().set("persistent_skins", false);
                     SkinSetterAPI.getInstance().saveConfig();
 
@@ -368,19 +414,20 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                     for(MPlayer pl : MidnightCoreAPI.getInstance().getPlayerManager()) {
 
-                        mod.getPlayerData(pl.getUUID()).set("skinsetter", null);
-                        mod.savePlayerData(pl.getUUID());
+                        mod.getGlobalProvider().getPlayerData(pl.getUUID()).set("skinsetter", null);
+                        mod.getGlobalProvider().savePlayerData(pl.getUUID());
                     }
 
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.persistence.result.disabled");
 
                 } else {
 
-                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistance <enable/disable>"));
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin persistence <enable/disable>"));
                 }
 
                 break;
 
+            // Set random subcommand
             case "setrandom":
 
                 MPlayer mpl = null;
@@ -412,7 +459,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                 break;
 
-            // Edit command
+            // Edit subcommand
             case "edit":
 
                 // Send error if improperly formatted
@@ -433,7 +480,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     case "item":
 
                         if(args.length < 4) {
-                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit item <clear/save>"));
+                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> item <clear/save>"));
                             return true;
                         }
 
@@ -464,15 +511,15 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                                 break;
                             default:
-                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit item <clear/save>"));
+                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> item <clear/save>"));
                                 return true;
                         }
-
                         break;
+
                     case "name":
 
                         if(args.length < 4) {
-                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit name <name>"));
+                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> name <name>"));
                             return true;
                         }
 
@@ -488,12 +535,12 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                         saved.setName(name);
 
                         LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.name.result", saved);
-
                         break;
+
                     case "groups":
 
                         if(args.length < 5) {
-                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit groups <add/remove> <group>"));
+                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> groups <add/remove> <group>"));
                             return true;
                         }
 
@@ -510,47 +557,72 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
                                 break;
                             default:
-                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit groups <add/remove> <group>"));
+                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> groups <add/remove> <group>"));
                                 return true;
                         }
 
                         LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.groups.result", saved);
-
                         break;
+
                     case "excludeInRandom":
 
                         if(args.length < 4) {
-                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit excludeInRandom <true/false>"));
+                            LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> excludeInRandom <true/false>"));
                             return true;
                         }
 
                         switch (args[3]) {
                             case "true":
 
-                                saved.setInRandom(true);
+                                saved.setInRandom(false);
                                 LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.excludeInRandom.result.enabled", saved);
 
                                 break;
                             case "false":
 
-                                saved.setInRandom(false);
+                                saved.setInRandom(true);
                                 LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.excludeInRandom.result.disabled", saved);
 
                                 break;
 
                             default:
-                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit excludeInRandom <true/false>"));
+                                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> excludeInRandom <true/false>"));
                                 return true;
                         }
-
                         break;
 
                     default:
                         // Invalid subcommand
-                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <item/name/groups/excludeInRandom>"));
+                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin edit <skin> <item/name/groups/excludeInRandom>"));
                         return true;
 
                 }
+                break;
+
+            case "head":
+
+                if(args.length < 3) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", "/skin head <skin> <player>"));
+                    return true;
+                }
+
+                saved = util.getSavedSkin(args[1]);
+                if(saved == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                    return true;
+                }
+
+                p = Bukkit.getPlayerExact(args[2]);
+
+                if(p == null) {
+                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
+                    return true;
+                }
+
+                mpl = SpigotPlayer.wrap(p);
+                mpl.giveItem(saved.getHeadItem());
+
+                LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.head.result", saved);
                 break;
 
             default:

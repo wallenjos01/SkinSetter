@@ -2,11 +2,13 @@ package me.m1dnightninja.skinsetter.spigot;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
-import me.m1dnightninja.midnightcore.common.JavaLogger;
 import me.m1dnightninja.midnightcore.spigot.config.YamlConfigProvider;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;
-import me.m1dnightninja.skinsetter.common.SkinManagerImpl;
-import me.m1dnightninja.skinsetter.common.SkinUtil;
+import me.m1dnightninja.skinsetter.common.SkinSetterImpl;
+import me.m1dnightninja.skinsetter.common.core.SkinManagerImpl;
+import me.m1dnightninja.skinsetter.common.util.SkinUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,18 +33,24 @@ public class SkinSetter extends JavaPlugin {
             return;
         }
 
-        JavaLogger log = new JavaLogger(this.getLogger());
+        Logger logger = LogManager.getLogger("SkinSetter");
         if(!MidnightCoreAPI.getInstance().areAllModulesLoaded("midnightcore:skin","midnightcore:lang","midnightcore:player_data")) {
 
-            log.warn("Unable to enable SkinSetter! One or more required MidnightCore modules are missing!");
+            logger.warn("Unable to enable SkinSetter! One or more required MidnightCore modules are missing!");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
 
-        ConfigSection sec = new YamlConfigProvider().loadFromStream(getResource("en_us.yml"));
-        ConfigSection cfg = new YamlConfigProvider().loadFromStream(getResource("config.yml"));
+        YamlConfigProvider prov = new YamlConfigProvider();
 
-        new SkinSetterAPI(log, getDataFolder(), sec, cfg, new SkinManagerImpl());
+        ConfigSection eng = prov.loadFromStream(getResource("en_us.yml"));
+        ConfigSection esp = prov.loadFromStream(getResource("es_mx.yml"));
+
+        ConfigSection cfg = prov.loadFromStream(getResource("config.yml"));
+
+        SkinSetterAPI api = new SkinSetterImpl(getDataFolder(), eng, cfg, new SkinManagerImpl());
+        api.getLangProvider().saveEntries(eng, "en_us");
+        api.getLangProvider().saveEntries(esp, "es_mx");
 
         util = new SkinUtil();
 

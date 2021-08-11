@@ -5,6 +5,11 @@ artifacts {
 
 dependencies {
 
+    compileOnly('org.jetbrains:annotations:19.0.0')
+
+    compileOnly('org.apache.logging.log4j:log4j-api:2.14.1')
+    compileOnly('org.apache.logging.log4j:log4j-core:2.14.1')
+
     compileOnly("me.m1dnightninja.hideandseek:api:1.0-latest")
     compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
 

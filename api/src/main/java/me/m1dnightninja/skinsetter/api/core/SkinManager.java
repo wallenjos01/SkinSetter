@@ -1,8 +1,9 @@
-package me.m1dnightninja.skinsetter.api;
+package me.m1dnightninja.skinsetter.api.core;
 
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
+import me.m1dnightninja.skinsetter.api.SavedSkin;
 
 import java.util.List;
 
