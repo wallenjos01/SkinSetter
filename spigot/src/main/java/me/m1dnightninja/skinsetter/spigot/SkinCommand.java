@@ -8,6 +8,7 @@ import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.registry.MIdentifier;
 import me.m1dnightninja.midnightcore.api.text.MComponent;
+import me.m1dnightninja.midnightcore.spigot.inventory.SpigotItem;
 import me.m1dnightninja.midnightcore.spigot.module.lang.LangModule;
 import me.m1dnightninja.midnightcore.spigot.player.SpigotPlayer;
 import me.m1dnightninja.skinsetter.api.SavedSkin;
@@ -16,6 +17,7 @@ import me.m1dnightninja.skinsetter.common.util.SkinUtil;
 import me.m1dnightninja.skinsetter.spigot.integration.CitizensIntegration;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -54,7 +56,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
             case 1:
                 // Only list subcommands the player can use
                 for(String str : subcommands) {
-                    if(sender.hasPermission("skinstter.command." + str)) suggestions.add(str);
+                    if(sender.hasPermission("skinsetter.command." + str)) suggestions.add(str);
                 }
                 break;
 
@@ -231,9 +233,15 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 SavedSkin saved = util.getSavedSkin(id);
                 Skin skin;
 
-                boolean original  = (args.length > 3 && args[3].equals("-o"));
+                boolean original = args.length > 3 && args[3].equals("-o");
 
                 if(original || saved == null) {
+
+                    if(!mp.hasPermission("skinsetter.command.set.online")) {
+
+                        mp.sendMessage(SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.invalid_skin", mp));
+                        return true;
+                    }
 
                     Player other = Bukkit.getPlayerExact(id);
                     if(other == null || (original && !Bukkit.getServer().getOnlineMode())) {
@@ -260,6 +268,12 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     }
 
                 } else {
+
+                    if(!saved.canUse(mp)) {
+
+                        mp.sendMessage(SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.invalid_skin", mp));
+                        return true;
+                    }
 
                     util.setSkin(mp, saved.getSkin());
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
@@ -300,7 +314,13 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                 p = Bukkit.getPlayerExact(args[1]);
                 id = args[2];
 
-                if(util.getSavedSkin(id) != null && !sender.hasPermission("skinsetter.overwrite_skins")) {
+                MPlayer mpl = null;
+                if(sender instanceof Player) {
+                    mpl = SpigotPlayer.wrap(((Player) sender));
+                }
+
+                saved = util.getSavedSkin(id);
+                if(saved != null && (!saved.canUse(mpl) || !sender.hasPermission("skinsetter.overwrite_skins"))) {
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_overwrite");
                     return true;
                 }
@@ -430,7 +450,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
             // Set random subcommand
             case "setrandom":
 
-                MPlayer mpl = null;
+                mpl = null;
                 if(sender instanceof Player) {
                     mpl = SpigotPlayer.wrap(((Player) sender));
                 }
@@ -446,13 +466,18 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                p = Bukkit.getPlayerExact(args[1]);
-                if(p == null) {
-                    LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
-                    return true;
+                if(args.length > 1) {
+                    p = Bukkit.getPlayerExact(args[1]);
+                    if (p == null) {
+                        LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_name");
+                        return true;
+                    }
+                    mp = SpigotPlayer.wrap(p);
+                } else {
+
+                    mp = mpl;
                 }
 
-                mp = SpigotPlayer.wrap(p);
                 util.setSkin(mp, saved.getSkin());
 
                 LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.set.result", mp);
@@ -468,8 +493,13 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
+                mpl = null;
+                if(sender instanceof Player) {
+                    mpl = SpigotPlayer.wrap(((Player) sender));
+                }
+
                 saved = util.getSavedSkin(args[1]);
-                if(saved == null) {
+                if(saved == null || !saved.canUse(mpl)) {
                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                     return true;
                 }
@@ -495,7 +525,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
                                 mpl = SpigotPlayer.wrap((Player) sender);
 
                                 MItemStack is = mpl.getItemInMainHand();
-                                if(is.getType().equals(MIdentifier.parseOrDefault("air"))) {
+                                if(((SpigotItem) is).getBukkitStack().getType() == Material.AIR) {
                                     LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_item");
                                     return true;
                                 }
@@ -649,6 +679,7 @@ public class SkinCommand implements CommandExecutor, TabCompleter {
 
         if(found == 0) {
             LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
+            return;
         }
 
         LangModule.sendMessage(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.usage", new CustomPlaceholderInline("usage", builder.toString()));

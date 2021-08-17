@@ -41,7 +41,7 @@ public class SkinSetter extends JavaPlugin {
             return;
         }
 
-        YamlConfigProvider prov = new YamlConfigProvider();
+        YamlConfigProvider prov = YamlConfigProvider.INSTANCE;
 
         ConfigSection eng = prov.loadFromStream(getResource("en_us.yml"));
         ConfigSection esp = prov.loadFromStream(getResource("es_mx.yml"));
@@ -49,8 +49,12 @@ public class SkinSetter extends JavaPlugin {
         ConfigSection cfg = prov.loadFromStream(getResource("config.yml"));
 
         SkinSetterAPI api = new SkinSetterImpl(getDataFolder(), eng, cfg, new SkinManagerImpl());
-        api.getLangProvider().saveEntries(eng, "en_us");
-        api.getLangProvider().saveEntries(esp, "es_mx");
+
+        api.getLangProvider().loadEntries("en_us", eng);
+        api.getLangProvider().saveEntries("en_us");
+
+        api.getLangProvider().loadEntries("es_mx", esp);
+        api.getLangProvider().saveEntries("es_mx");
 
         util = new SkinUtil();
 

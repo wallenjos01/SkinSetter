@@ -103,6 +103,8 @@ public class SavedSkin {
 
     public boolean canUse(MPlayer player) {
 
+        if(player == null) return true;
+
         for(String s : groups) {
             if(player.hasPermission("skinsetter.group." + s)) return true;
         }

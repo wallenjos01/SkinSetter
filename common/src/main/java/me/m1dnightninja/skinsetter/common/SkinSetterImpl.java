@@ -1,7 +1,6 @@
 package me.m1dnightninja.skinsetter.common;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
-import me.m1dnightninja.midnightcore.api.config.ConfigProvider;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
 import me.m1dnightninja.midnightcore.api.config.FileConfig;
 import me.m1dnightninja.midnightcore.api.module.lang.ILangModule;
@@ -30,20 +29,17 @@ public class SkinSetterImpl extends SkinSetterAPI {
         }
 
         MidnightCoreAPI.getInstance().getConfigRegistry().registerSerializer(SavedSkin.class, SavedSkin.SERIALIZER);
-        ConfigProvider configProvider = MidnightCoreAPI.getInstance().getDefaultConfigProvider();
 
-        File skinFile = new File(configFolder, "config" + configProvider.getFileExtension());
-        this.config = new FileConfig(skinFile, configProvider);
+        this.config = FileConfig.findOrCreate("config", configFolder);
         this.defaultConfig = defaultConfig;
 
-        if(!skinFile.exists()) {
-            config.save();
-        }
+        config.getRoot().fill(defaultConfig);
+        config.save();
 
         ILangModule module = MidnightCoreAPI.getInstance().getModule(ILangModule.class);
         SavedSkin.registerPlaceholders(module);
 
-        langProvider = module.createLangProvider(new File(configFolder, "lang"), configProvider, defaultLang);
+        langProvider = module.createLangProvider(new File(configFolder, "lang"), defaultLang);
 
 
         this.registry = registry;
@@ -86,7 +82,7 @@ public class SkinSetterImpl extends SkinSetterAPI {
 
     @Override
     public void setDefaultSkin(SavedSkin skin) {
-
+        this.defaultSkin = skin;
     }
 
     @Override

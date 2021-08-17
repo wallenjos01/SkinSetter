@@ -74,7 +74,7 @@ public final class SkinUtil {
         return null;
     }
 
-    public final void getSkinOnline(String playerName, SkinCallback cb) {
+    public void getSkinOnline(String playerName, SkinCallback cb) {
         new Thread(() -> {
             UUID u = MojangUtil.getUUID(playerName);
             cb.onSkinAvailable(u, skinModule.getOnlineSkin(u));
@@ -157,7 +157,7 @@ public final class SkinUtil {
 
         if(SkinSetterAPI.getInstance().isPersistenceEnabled()) {
 
-            if(!skins.containsKey(u) || skins.get(u).equals(SkinSetterAPI.getInstance().getDefaultSkin().getSkin())) {
+            if(!skins.containsKey(u) || (SkinSetterAPI.getInstance().getDefaultSkin() != null && skins.get(u).equals(SkinSetterAPI.getInstance().getDefaultSkin().getSkin()))) {
 
                 dataProvider.getPlayerData(u.getUUID()).set("skinsetter", null);
 
@@ -176,70 +176,71 @@ public final class SkinUtil {
 
     public void openGUI(MPlayer player, MPlayer perms) {
 
-        try {
-            MInventoryGUI gui = MidnightCoreAPI.getInstance().createInventoryGUI(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.set.title", player));
+        MInventoryGUI gui = MidnightCoreAPI.getInstance().createInventoryGUI(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.set.title", player));
 
-            List<SavedSkin> skins = reg.getSkins(perms, null, false);
+        List<SavedSkin> skins = reg.getSkins(perms, null, false);
 
+        if(skins.size() == 0) {
 
-            int pages = 1;
-            if(skins.size() > 55) {
-                pages = skins.size() / 45;
-                if(skins.size() % 45 != 0) pages += 1;
-            }
-
-            MItemStack nextPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("lime_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.next_page", player)).build();
-            MItemStack prevPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("red_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.prev_page", player)).build();
-
-            MInventoryGUI.ClickAction next = (type, user) -> gui.open(user, gui.getPlayerPage(user) + 1);
-            MInventoryGUI.ClickAction prev = (type, user) -> gui.open(user, gui.getPlayerPage(user) - 1);
-
-            if (pages > 1) {
-                for (int i = 0; i < pages; i++) {
-
-                    int offset = i * 54;
-
-                    if (i > 0) {
-                        gui.setItem(prevPage, offset + 45, prev);
-                    }
-                    if (i + 1 < pages) {
-                        gui.setItem(nextPage, offset + 53, next);
-                    }
-                }
-
-                int index = 0;
-                int page = 0;
-                for (SavedSkin skin : skins) {
-
-                    gui.setItem(skin.getItemStack(), (page * 54) + index, (type, user) -> {
-                        setSkin(user, skin.getSkin());
-                        gui.close(user);
-                    });
-
-                    index++;
-                    if(index > 44) {
-                        page++;
-                        index = 0;
-                    }
-                }
-
-            } else {
-
-                int index = 0;
-                for (SavedSkin skin : skins) {
-
-                    gui.setItem(skin.getItemStack(), index, (type, user) -> {
-                        setSkin(user, skin.getSkin());
-                        gui.close(user);
-                    });
-                    index++;
-                }
-            }
-
-            gui.open(player, 0);
-        } catch (Throwable th) {
-            th.printStackTrace();
+            player.sendMessage(SkinSetterAPI.getInstance().getLangProvider().getMessage("command.error.no_saved", player));
+            return;
         }
+
+        int pages = 1;
+        if(skins.size() > 55) {
+            pages = skins.size() / 45;
+            if(skins.size() % 45 != 0) pages += 1;
+        }
+
+        MItemStack nextPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("lime_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.next_page", player)).build();
+        MItemStack prevPage = MItemStack.Builder.of(MIdentifier.parseOrDefault("red_stained_glass_pane")).withName(SkinSetterAPI.getInstance().getLangProvider().getMessage("gui.prev_page", player)).build();
+
+        MInventoryGUI.ClickAction next = (type, user) -> gui.open(user, gui.getPlayerPage(user) + 1);
+        MInventoryGUI.ClickAction prev = (type, user) -> gui.open(user, gui.getPlayerPage(user) - 1);
+
+        if (pages > 1) {
+            for (int i = 0; i < pages; i++) {
+
+                int offset = i * 54;
+
+                if (i > 0) {
+                    gui.setItem(prevPage, offset + 45, prev);
+                }
+                if (i + 1 < pages) {
+                    gui.setItem(nextPage, offset + 53, next);
+                }
+            }
+
+            int index = 0;
+            int page = 0;
+            for (SavedSkin skin : skins) {
+
+                gui.setItem(skin.getItemStack(), (page * 54) + index, (type, user) -> {
+                    setSkin(user, skin.getSkin());
+                    gui.close(user);
+                });
+
+                index++;
+                if(index > 44) {
+                    page++;
+                    index = 0;
+                }
+            }
+
+        } else {
+
+            int index = 0;
+            for (SavedSkin skin : skins) {
+
+                gui.setItem(skin.getItemStack(), index, (type, user) -> {
+                    setSkin(user, skin.getSkin());
+                    gui.close(user);
+                });
+                index++;
+            }
+        }
+
+        gui.open(player, 0);
     }
 
 }
