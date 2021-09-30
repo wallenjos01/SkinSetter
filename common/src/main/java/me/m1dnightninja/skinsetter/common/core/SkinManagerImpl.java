@@ -2,7 +2,9 @@ package me.m1dnightninja.skinsetter.common.core;
 
 import com.google.gson.internal.LinkedTreeMap;
 import me.m1dnightninja.midnightcore.api.config.ConfigSection;
+import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
+import me.m1dnightninja.midnightcore.api.text.MComponent;
 import me.m1dnightninja.skinsetter.api.SavedSkin;
 import me.m1dnightninja.skinsetter.api.core.SkinManager;
 import me.m1dnightninja.skinsetter.api.SkinSetterAPI;

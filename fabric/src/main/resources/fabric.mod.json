@@ -16,6 +16,9 @@
       "me.m1dnightninja.${modid}.fabric.${modclass}"
     ]
   },
+  "mixins": [
+    "skinsetter.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.10.6+build.214",
     "fabric": "*",

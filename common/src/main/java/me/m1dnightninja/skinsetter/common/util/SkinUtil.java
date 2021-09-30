@@ -9,6 +9,7 @@ import me.m1dnightninja.midnightcore.api.module.playerdata.IPlayerDataProvider;
 import me.m1dnightninja.midnightcore.api.module.skin.ISkinModule;
 import me.m1dnightninja.midnightcore.api.module.skin.Skin;
 import me.m1dnightninja.midnightcore.api.module.skin.SkinCallback;
+import me.m1dnightninja.midnightcore.api.module.skin.Skinnable;
 import me.m1dnightninja.midnightcore.api.player.MPlayer;
 import me.m1dnightninja.midnightcore.api.registry.MIdentifier;
 import me.m1dnightninja.midnightcore.common.util.MojangUtil;
@@ -48,12 +49,32 @@ public final class SkinUtil {
         skinModule.updateSkin(player);
     }
 
+    public void setSkin(UUID u, Skinnable ent, Skin skin) {
+
+        if(u.version() == 4) {
+            setSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(u), skin);
+            return;
+        }
+
+        ent.setSkin(skin);
+    }
+
     public void resetSkin(MPlayer player) {
 
         skins.remove(player);
 
         skinModule.resetSkin(player);
         skinModule.updateSkin(player);
+    }
+
+    public void resetSkin(UUID u, Skinnable ent) {
+
+        if(u.version() == 4) {
+            resetSkin(MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(u));
+            return;
+        }
+
+        ent.resetSkin();
     }
 
     public Skin getSkin(MPlayer player) {
@@ -63,6 +84,11 @@ public final class SkinUtil {
         }
 
         return null;
+    }
+
+    public Skin getSkin(Skinnable ent) {
+
+        return ent.getSkin();
     }
 
     public Skin getLoginSkin(MPlayer player) {
@@ -108,6 +134,12 @@ public final class SkinUtil {
         if(player.isOffline()) return;
 
         Skin s = skinModule.getSkin(player);
+        reg.saveSkin(new SavedSkin(name, s), name);
+    }
+
+    public void saveSkin(Skinnable ent, String name) {
+
+        Skin s = ent.getSkin();
         reg.saveSkin(new SavedSkin(name, s), name);
     }
 

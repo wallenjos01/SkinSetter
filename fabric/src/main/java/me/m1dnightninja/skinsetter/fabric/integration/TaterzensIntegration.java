@@ -1,4 +1,4 @@
-package me.m1dnightninja.skinsetter.fabric.integragion;
+package me.m1dnightninja.skinsetter.fabric.integration;
 
 import me.m1dnightninja.midnightcore.api.MidnightCoreAPI;
 import me.m1dnightninja.midnightcore.api.module.lang.CustomPlaceholderInline;

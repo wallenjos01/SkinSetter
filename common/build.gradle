@@ -9,9 +9,10 @@ repositories {
 dependencies {
 
     compileOnly('com.mojang:authlib:2.1.28')
-    compileOnly('com.google.code.gson:gson:2.8.0')
+    compileOnly('com.google.code.gson:gson:2.8.8')
 
     compileOnly("me.m1dnightninja.hideandseek:api:1.0-latest")
+    compileOnly("me.m1dnightninja.midnightnpcs:api:1.0-latest")
     compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
     compileOnly("me.m1dnightninja.midnightcore:common:1.0-latest")
 
