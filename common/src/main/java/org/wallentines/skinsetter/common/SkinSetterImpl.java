@@ -13,6 +13,7 @@ import org.wallentines.skinsetter.common.integration.HideAndSeekIntegration;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 
 public class SkinSetterImpl extends SkinSetterAPI {
 
@@ -40,7 +41,6 @@ public class SkinSetterImpl extends SkinSetterAPI {
             throw new IllegalStateException("Unable to create config!");
         }
         this.config.getRoot().fill(Constants.CONFIG_DEFAULTS);
-        this.config.save();
 
         Constants.registerIntegrations();
 
@@ -52,6 +52,11 @@ public class SkinSetterImpl extends SkinSetterAPI {
         this.langProvider = MidnightCoreAPI.getInstance().getModuleManager().getModule(LangModule.class).createProvider(dataFolder.resolve("lang"), langDefaults);
         this.skinRegistry = new SkinRegistryImpl(skinFolder);
 
+        if(this.config.getRoot().has("skins", List.class)) {
+            MidnightCoreAPI.getLogger().info("Attempting to upgrade data from a pre-3.0 version of SkinSetter...");
+            SavedSkinImpl.updateFromOldConfig(this.config.getRoot(), this.skinRegistry);
+        }
+
         try {
             Class.forName("org.wallentines.hideandseek.api.event.ClassApplyEvent");
             HideAndSeekIntegration.setup();
@@ -61,6 +66,8 @@ public class SkinSetterImpl extends SkinSetterAPI {
 
         defaultSkin = skinRegistry.getSkin(config.getRoot().getString(Constants.CONFIG_KEY_DEFAULT_SKIN));
         persistence = config.getRoot().getBoolean(Constants.CONFIG_KEY_PERSISTENCE);
+
+        this.config.save();
     }
 
     public void reload() {

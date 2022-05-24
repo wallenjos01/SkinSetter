@@ -172,7 +172,7 @@ public class SavedSkinImpl implements SavedSkin {
 
     public static void updateFromOldConfig(ConfigSection section, SkinRegistryImpl registry) {
 
-        for(ConfigSection sec : section.getListFiltered("skins", section)) {
+        for(ConfigSection sec : section.getListFiltered("skins", ConfigSection.class)) {
 
             SavedSkinImpl skin = SERIALIZER_LEGACY.deserialize(sec);
             registry.registerSkin(skin);
