@@ -1,0 +1,66 @@
+buildscript {
+    repositories {
+        // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+    }
+}
+
+plugins {
+
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+apply plugin: 'net.minecraftforge.gradle'
+
+configurations {
+    shade
+    compileOnly.extendsFrom shade
+}
+
+shadowJar {
+
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+}
+tasks.assemble.dependsOn tasks.shadowJar
+
+minecraft {
+    mappings channel: 'official', version: "${project.forge_minecraft_version}"
+}
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+dependencies {
+
+    minecraft "net.minecraftforge:forge:${project.forge_version}"
+
+    shade 'org.wallentines:midnightlib:1.0-SNAPSHOT'
+
+    shade project(':api')
+    shade project(':common')
+}
+
+processResources {
+
+    Map<String, ?> ex = new HashMap<>()
+    ex.put("version", project.version)
+    ex.put("id", project.mod_id)
+    ex.put("name", project.mod_name)
+    ex.put("target", project.name)
+    ex.put("description", project.description)
+    ex.put("group", project.group)
+    ex.put("minecraftVersion", project.forge_minecraft_version)
+    ex.put("mainClass", project.main_class_name)
+
+    filesMatching("pack.mcmeta") {
+        expand(ex)
+    }
+
+    filesMatching("META-INF/mods.toml") {
+        expand(ex)
+    }
+}
+
+

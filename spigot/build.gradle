@@ -1,100 +1,47 @@
-
 plugins {
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+
 }
 
 configurations {
     shade
-    compileOnly.extendsFrom shade
 }
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-    maven {
-        url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
-    }
-    maven {
-        url "https://libraries.minecraft.net/"
-    }
-    maven {
-        url "https://jitpack.io/"
-    }
-    maven {
-        url 'https://repo.citizensnpcs.co/'
-    }
+shadowJar {
 
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
 }
+tasks.assemble.dependsOn tasks.shadowJar
 
 dependencies {
 
-    compileOnly("org.spigotmc:spigot:${project.ext.minecraftVersion}-R0.1-SNAPSHOT")
+    implementation "org.spigotmc:spigot:${project.spigot_version}"
+    implementation 'org.wallentines:midnightlib:1.0-SNAPSHOT'
+    implementation 'org.wallentines.midnightcore:spigot:1.0-SNAPSHOT'
 
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
+    implementation project(':api')
+    implementation project(':common')
 
-    compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
-    compileOnly("me.m1dnightninja.midnightcore:common:1.0-latest")
-    compileOnly("me.m1dnightninja.midnightcore:spigot:1.0-latest")
-
-    compileOnly("net.citizensnpcs:citizens-main:2.0.27-SNAPSHOT")
-
-    shade(project(":api"))
-    shade(project(":common"))
+    shade project(':api')
+    shade project(':common')
 
 }
 
 processResources {
 
     Map<String, ?> ex = new HashMap<>()
-    ex.put("version", project.ext.fullVersion)
-    ex.put("modid", project.ext.modid)
-    ex.put("modname", project.ext.modname)
-    ex.put("modclass", project.ext.modclass)
-    ex.put("minecraftVersion", project.ext.minecraftMajorVersion)
+    ex.put("version", project.version)
+    ex.put("id", project.mod_id)
+    ex.put("name", project.mod_name)
+    ex.put("target", project.name)
+    ex.put("description", project.description)
+    ex.put("group", project.group)
+    ex.put("minecraftVersion", project.spigot_api_version)
+    ex.put("mainClass", project.main_class_name)
 
     filesMatching("plugin.yml") {
         expand(ex)
-    }
-}
-
-shadowJar {
-
-    archiveBaseName.set("${project.ext.archiveName}-spigot-mc${project.ext.minecraftVersion}")
-    configurations = [project.configurations.shade]
-
-    dependencies {
-        exclude('net.minecraft:.*')
-        exclude('net.spigotmc:.*')
-        exclude('org.bukkit:.*')
-        include(project(':api'))
-        include(project(':common'))
-    }
-}
-
-tasks.assemble.dependsOn tasks.shadowJar
-
-artifacts {
-    archives jar
-    shadow sourcesJar
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            version = project.ext.publicationVersion
-            artifact(jar)
-            artifact(sourcesJar)
-        }
-    }
-    repositories {
-        maven {
-            if (project.hasProperty("pubUrl")) {
-                url = project.pubUrl as String
-                credentials {
-                    username project.pubUser as String
-                    password project.pubPass as String
-                }
-            }
-        }
     }
 }

@@ -1,38 +1,12 @@
-artifacts {
-    jar
-    sourcesJar
-}
-
 dependencies {
 
-    compileOnly('org.jetbrains:annotations:19.0.0')
-
-    compileOnly('org.apache.logging.log4j:log4j-api:2.14.1')
-    compileOnly('org.apache.logging.log4j:log4j-core:2.14.1')
-
-    compileOnly("me.m1dnightninja.hideandseek:api:1.0-latest")
-    compileOnly("me.m1dnightninja.midnightcore:api:1.0-latest")
-
+    testImplementation 'org.apache.logging.log4j:log4j-api:2.17.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'com.google.code.gson:gson:2.9.0'
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            version = project.ext.publicationVersion
-            artifact(jar)
-            artifact(sourcesJar)
-        }
-    }
+test {
 
-    repositories {
-        maven {
-            if (project.hasProperty("pubUrl")) {
-                url = project.pubUrl as String
-                credentials {
-                    username project.pubUser as String
-                    password project.pubPass as String
-                }
-            }
-        }
-    }
+    useJUnit()
+    maxHeapSize = '1G'
 }

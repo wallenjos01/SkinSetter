@@ -1,60 +1,69 @@
-allprojects {
-    configurations {
-        compileClasspath
-    }
-}
 
-defaultTasks 'build'
+group = project.group
+version = project.version
 
 subprojects {
 
     apply plugin: 'java'
     apply plugin: 'maven-publish'
 
-    project.ext.archiveName = "skinsetter"
-    project.ext.modid = "skinsetter"
-    project.ext.modclass = "SkinSetter"
-    project.ext.modname = "SkinSetter"
-    project.ext.minecraftVersion = "1.17.1"
-    project.ext.minecraftMajorVersion = "1.17"
-
-    project.ext.majorVersion = '2'
-    project.ext.minorVersion = '1'
-    project.ext.patchVersion = '0'
-
-    def release = false
-
-    project.ext.apiVersion = project.ext.majorVersion + '.' + project.ext.minorVersion
-    project.ext.fullVersion = project.ext.apiVersion + '.' + project.ext.patchVersion
-    project.ext.publicationVersion = release ? project.ext.fullVersion : "${project.ext.apiVersion}-latest"
-
-    group = "me.m1dnightninja.${project.ext.archiveName}"
-    version = project.ext.fullVersion
-
-
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-
-
-    tasks.withType(JavaCompile) {
-        options.encoding("UTF-8")
-    }
-
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier("sources")
-        from sourceSets.main.allSource
-    }
-
-    jar {
-        from "LISENCE"
-    }
+    archivesBaseName = "${project.mod_id}-${project.name}"
 
     repositories {
-        mavenLocal()
         mavenCentral()
-        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-        maven { url 'https://mdmc.ddns.net/maven' }
+        mavenLocal()
+        maven {
+            url 'https://maven.wallentines.org/'
+        }
+        maven {
+            url "https://libraries.minecraft.net/"
+        }
     }
 
+    dependencies {
+
+        compileOnly 'org.apache.logging.log4j:log4j-api:2.17.0'
+        compileOnly 'org.wallentines.midnightcore:api:1.0-SNAPSHOT'
+
+        compileOnly 'org.wallentines:midnightlib:1.0-SNAPSHOT'
+    }
+
+    java {
+        withSourcesJar()
+    }
+
+	tasks.withType(AbstractArchiveTask) {
+		preserveFileTimestamps = false
+		reproducibleFileOrder = true
+	}
+
+	tasks.withType(GenerateModuleMetadata) {
+		enabled = false
+	}
+
+    test {
+        useJUnit()
+        maxHeapSize = '1G'
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                groupId = "${project.group}.${project.mod_id}"
+            }
+        }
+        repositories {
+            maven {
+                if (project.hasProperty("pubUrl")) {
+                    url = project.pubUrl as String
+                    credentials {
+                        username project.pubUser as String
+                        password project.pubPass as String
+                    }
+                }
+            }
+        }
+    }
 
 }

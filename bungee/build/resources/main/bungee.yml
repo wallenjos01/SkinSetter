@@ -1,0 +1,4 @@
+name: SkinSetter
+main: org.wallentines.skinsetter.bungee.SkinSetter
+version: 1.0-SNAPSHOT
+author: M1dnight_Ninja

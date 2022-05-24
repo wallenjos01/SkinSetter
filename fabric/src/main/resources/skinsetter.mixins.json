@@ -1,13 +1,10 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "me.m1dnightninja.skinsetter.fabric.mixin",
+  "package": "${group}.${id}.${target}.mixin",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "MixinServerPlayer"
-  ],
-  "client": [
-  ],
+  "mixins": [ ],
+  "client": [ ],
   "injectors": {
     "defaultRequire": 1
   }

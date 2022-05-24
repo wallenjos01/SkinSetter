@@ -1,16 +1,20 @@
 pluginManagement {
-    repositories {
-        jcenter()
-        maven {
-            url 'https://maven.fabricmc.net/'
-        }
-        gradlePluginPortal()
-    }
+	repositories {
+		gradlePluginPortal()
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+	}
 }
 
-rootProject.name = 'skinsetter'
+rootProject.name = "skinsetter"
 
 include 'api'
 include 'common'
+
 include 'fabric'
 include 'spigot'
+//include 'forge'
+include 'velocity'
+include 'bungee'

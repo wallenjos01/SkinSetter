@@ -1,0 +1,18 @@
+modLoader="javafml"
+loaderVersion="[39,)"
+license="All rights reserved"
+
+[[mods]]
+modId="skinsetter"
+version="1.0-SNAPSHOT"
+displayName="Example Mod"
+logoFile="assets/skinsetter/icon.png"
+authors="M1dnight_Ninja"
+description="A mod which allows you to change player skins with a command"
+
+[[dependencies.skinsetter]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.18.1,1.19)"
+    ordering="NONE"
+    side="BOTH"

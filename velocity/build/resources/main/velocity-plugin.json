@@ -1,0 +1,13 @@
+{
+  "id":"skinsetter",
+  "name":"SkinSetter",
+  "version":"1.0-SNAPSHOT",
+  "url":"",
+  "authors": [
+    "M1dnight_Ninja"
+  ],
+  "dependencies":[
+
+  ],
+  "main":"org.wallentines.skinsetter.velocity.SkinSetter"
+}

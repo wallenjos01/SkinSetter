@@ -1,28 +1,29 @@
 {
-  "schemaVersion": 1,
-  "id": "${modid}",
-  "version": "${version}",
-  "name": "${modname}",
-  "description": "Change players' skins",
-  "authors": [
-    "M1dnight_Ninja"
-  ],
-  "contact": {},
-  "license": "MIT",
-  "icon": "assets/skinsetter/icon.png",
-  "environment": "*",
-  "entrypoints": {
-    "midnightcore:mod": [
-      "me.m1dnightninja.${modid}.fabric.${modclass}"
-    ]
-  },
-  "mixins": [
-    "skinsetter.mixins.json"
-  ],
-  "depends": {
-    "fabricloader": ">=0.10.6+build.214",
-    "fabric": "*",
-    "minecraft": "${minecraftVersion}.x",
-    "midnightcore": "1.0.x"
-  }
+    "schemaVersion": 1,
+    "id": "${id}",
+    "version": "${version}",
+    "environment": "*",
+    "entrypoints": {
+        "midnightcore": [
+            "${group}.${id}.${target}.${mainClass}"
+        ]
+    },
+    "mixins": [
+        "${id}.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=${fabricLoader}",
+        "minecraft": "${minecraftVersion}"
+    },
+    "name": "${name}",
+    "description": "${description}",
+    "contact": {
+        "homepage": "https://wallentines.org/"
+    },
+    "authors": [
+        {
+            "name": "M1dnight_Ninja"
+        }
+    ],
+    "icon": "icon.png"
 }

@@ -1,115 +1,94 @@
-import net.fabricmc.loom.task.RemapJarTask
+// Loom documentation: https://fabricmc.net/wiki/documentation:fabric_loom
+// fabric.mod.json documentation: https://fabricmc.net/wiki/documentation:fabric_mod_json
 
 plugins {
-    id 'fabric-loom' version '0.8-SNAPSHOT'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+
+    id 'fabric-loom' version '0.11-SNAPSHOT'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+
 }
 
 repositories {
-    mavenLocal()
-    maven { url 'https://maven.fabricmc.net/' }
-    maven {
-        url 'https://jitpack.io/'
-    }
-    maven {
-        url = "https://maven.nucleoid.xyz/"
-    }
+
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 }
 
 configurations {
     shade
-    compileOnly.extendsFrom shade
 }
+
+shadowJar {
+
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+}
+tasks.assemble.dependsOn tasks.shadowJar
 
 dependencies {
 
-    minecraft("com.mojang:minecraft:${project.ext.minecraftVersion}")
-    mappings(minecraft.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:0.11.3")
+    minecraft "com.mojang:minecraft:${project.fabric_minecraft_version}"
+    mappings loom.officialMojangMappings()
+    
+    modApi "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+    modApi 'org.wallentines:midnightlib:1.0-SNAPSHOT'
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.32.5+1.16")
-    modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
+    modApi 'org.wallentines.midnightcore:common:1.0-SNAPSHOT'
+    modApi 'org.wallentines.midnightcore:fabric:1.0-SNAPSHOT'
+    modApi 'me.lucko:fabric-permissions-api:0.1-SNAPSHOT'
 
-    modImplementation("me.m1dnightninja.midnightcore:api:1.0-latest")
-    modImplementation("me.m1dnightninja.midnightcore:common:1.0-latest")
-    modImplementation("me.m1dnightninja.midnightcore:fabric:1.0-latest") {
-        transitive = false
-    }
-
-    modImplementation 'org.samo_lego:taterzens-fabric:1.2.0'
+    implementation project(':api')
+    implementation project(':common')
 
     shade project(':api')
     shade project(':common')
 
 }
 
+loom {
+    runs {
+        client {
+            runDir = "run/client"
+            ideConfigGenerated = true
+            client()
+        }
+        server {
+            runDir = "run/server"
+            ideConfigGenerated = true
+            server()
+        }
+    }
+    interfaceInjection {
+		enableDependencyInterfaceInjection = true
+	}
+}
+
 processResources {
 
     Map<String, ?> ex = new HashMap<>()
-    ex.put("version", project.ext.fullVersion)
-    ex.put("modid", project.ext.modid)
-    ex.put("modname", project.ext.modname)
-    ex.put("modclass", project.ext.modclass)
-    ex.put("minecraftVersion", project.ext.minecraftMajorVersion)
+    ex.put("version", project.version)
+    ex.put("id", project.mod_id)
+    ex.put("name", project.mod_name)
+    ex.put("target", project.name)
+    ex.put("description", project.description)
+    ex.put("group", project.group)
+    ex.put("minecraftVersion", project.fabric_minecraft_version)
+    ex.put("fabricLoader", project.fabric_loader_version)
+    ex.put("mainClass", project.main_class_name)
 
     filesMatching("fabric.mod.json") {
+        expand(ex)
+    }
+    filesMatching("${project.mod_id}.mixins.json") {
         expand(ex)
     }
 }
 
 shadowJar {
-
-    setArchivesBaseName("${project.ext.archiveName}-fabric-dev")
     configurations = [project.configurations.shade]
-
-    dependencies {
-        exclude('net.fabricmc:.*')
-        include(project(':api'))
-        include(project(':common'))
-
-        exclude '/mappings/*'
-    }
+    classifier "dev"
 }
 
-task remapShadowJar(type: RemapJarTask) {
-
-    archiveBaseName.set("${project.ext.archiveName}-fabric-mc${project.ext.minecraftVersion}")
-
-    dependsOn(tasks.shadowJar)
-    input = tasks.shadowJar.getArchivePath()
-    addNestedDependencies = true
-
-}
-
-tasks.assemble.dependsOn tasks.remapShadowJar
-
-artifacts {
-    archives remapShadowJar
-    shadow sourcesJar
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            version = project.ext.publicationVersion
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            if (project.hasProperty("pubUrl")) {
-                url = project.pubUrl as String
-                credentials {
-                    username project.pubUser as String
-                    password project.pubPass as String
-                }
-            }
-        }
-    }
+remapJar {
+    dependsOn(shadowJar)
+    inputFile.set(shadowJar.archiveFile)
 }
