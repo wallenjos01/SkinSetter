@@ -18,8 +18,6 @@ public class HideAndSeekIntegration {
 
         Event.register(ClassApplyEvent.class, HideAndSeekIntegration.class, event -> {
 
-            SkinSetterAPI.getLogger().info("Received HideAndSeek class event. Changing skin of " + event.getPlayer().getUsername());
-
             ConfigSection ext = event.getPlayerClass().getExtraData();
             List<Skin> skins = new ArrayList<>();
             if(ext.has("skins", List.class)) {
@@ -31,8 +29,6 @@ public class HideAndSeekIntegration {
                     skins.add(s);
                 }
             }
-
-            SkinSetterAPI.getLogger().info(skins.size() + " skins found");
 
             if(skins.isEmpty()) return;
             event.getPlayer().setSkin(skins.get(Constants.RANDOM.nextInt(skins.size())));

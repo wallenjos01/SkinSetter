@@ -125,7 +125,7 @@ public class SavedSkinImpl implements SavedSkin {
             ConfigSerializer.entry(MComponent.class, "name", SavedSkinImpl::getName).optional(),
             ConfigSerializer.entry(Boolean.class, "in_random_selection", SavedSkinImpl::excludedFromRandom).orDefault(false),
             ConfigSerializer.entry(MItemStack.class, "item", SavedSkinImpl::getCustomItem).optional(),
-            ConfigSerializer.<String, SavedSkinImpl>listEntry("groups", sk -> new ArrayList<>(sk.getGroups())).optional(),
+            ConfigSerializer.<String, SavedSkinImpl>listEntry(String.class, "groups", sk -> new ArrayList<>(sk.getGroups())).optional(),
             (id, skin, name, random, item, groups) -> {
 
                 SavedSkinImpl out = new SavedSkinImpl(id, skin);

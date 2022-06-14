@@ -39,7 +39,7 @@ public class SkinSetter implements ModInitializer {
         });
 
         // Events
-        Event.register(CommandLoadEvent.class, this, event -> MainCommand.register(event.getDispatcher()));
+        Event.register(CommandLoadEvent.class, this, event -> MainCommand.register(event.getDispatcher(), event.getBuildContext()));
         Event.register(ServerStopEvent.class, this, event -> api.getSkinRegistry().save());
         Event.register(PlayerJoinEvent.class, this, event -> LoginManager.applyLoginSkin(FabricPlayer.wrap(event.getPlayer()), api.getSkinRegistry()));
         Event.register(PlayerLeaveEvent.class, this, event -> LoginManager.savePersistentSkin(FabricPlayer.wrap(event.getPlayer()), api.getDefaultSkin()));

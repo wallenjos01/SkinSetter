@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -44,7 +45,7 @@ import java.util.UUID;
 
 public class MainCommand {
 
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext) {
 
         LiteralArgumentBuilder<CommandSourceStack> cmd = Commands.literal("skin")
                 .requires(Permissions.require("skinsetter.command", 2))
@@ -176,7 +177,7 @@ public class MainCommand {
                                 .then(Commands.literal("item")
                                         .then(Commands.literal("save")
                                                 .executes(context -> executeEditSaveItem(context, context.getArgument("skin", String.class), context.getSource().getPlayerOrException().getMainHandItem()))
-                                                .then(Commands.argument("item", ItemArgument.item())
+                                                .then(Commands.argument("item", ItemArgument.item(buildContext))
                                                         .executes(context -> executeEditSaveItem(context, context.getArgument("skin", String.class), context.getArgument("item", ItemStack.class)))
                                                 )
                                         )
@@ -211,7 +212,6 @@ public class MainCommand {
                 );
 
         dispatcher.register(cmd);
-
     }
 
 

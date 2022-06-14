@@ -16,12 +16,10 @@ public final class Constants {
 
     public static final String CONFIG_KEY_PERSISTENCE = "persistent_skins";
     public static final String CONFIG_KEY_DEFAULT_SKIN = "default_skin";
-    public static final String CONFIG_KEY_SKINS = "skins";
 
     public static final Random RANDOM = new Random();
 
     public static final ConfigSection CONFIG_DEFAULTS = new ConfigSection()
-            .with(CONFIG_KEY_SKINS, new ArrayList<>())
             .with(CONFIG_KEY_PERSISTENCE, false)
             .with(CONFIG_KEY_DEFAULT_SKIN, "");
 
