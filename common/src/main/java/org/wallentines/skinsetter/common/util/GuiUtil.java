@@ -22,30 +22,33 @@ public class GuiUtil {
         if(skins.size() > 54) {
             pageSize = 45;
         }
-        int pages = skins.size() / pageSize + 1;
+        int pages = (int) Math.ceil(skins.size() / (float) pageSize);
 
         MItemStack nextItem = MItemStack.Builder.of(new Identifier("minecraft", "lime_stained_glass_pane")).withName(provider.getMessage("gui.next_page", player)).build();
         MItemStack prevItem = MItemStack.Builder.of(new Identifier("minecraft", "red_stained_glass_pane")).withName(provider.getMessage("gui.prev_page", player)).build();
 
         int index = 0;
-        int currentPage = 0;
         for(SavedSkin sk : skins) {
-            gui.setItem(index, sk.getDisplayItem(), (type, pl) -> out.accept(sk));
+
+            int slot = (index % pageSize) + (54 * (index / pageSize));
+            gui.setItem(slot, sk.getDisplayItem(), (type, pl) -> out.accept(sk));
+
             index++;
-            if(index > pageSize) {
+        }
 
-                int offset = 54 * currentPage;
-                if(currentPage != 0) {
-                    final int prevPage = currentPage - 1;
-                    gui.setItem(45 + offset, prevItem.copy(), (type, pl) -> gui.open(pl, prevPage));
-                }
-                index = (index % pageSize) + offset;
-                currentPage++;
+        for(int i = 0 ; i < pages ; i++) {
 
-                if(currentPage != pages) {
-                    final int nextPage = currentPage;
-                    gui.setItem(53 + offset, nextItem.copy(), (type, pl) -> gui.open(pl, nextPage));
-                }
+            if(i > 0) {
+
+                int slot = (54 * i) + 45;
+                int prevPage = i - 1;
+                gui.setItem(slot, prevItem.copy(), (type, pl) -> gui.open(pl, prevPage));
+            }
+            if(i < pages - 1) {
+
+                int slot = (54 * i) + 53;
+                int nextPage = i + 1;
+                gui.setItem(slot, nextItem.copy(), (type, pl) -> gui.open(pl, nextPage));
             }
         }
 

@@ -31,25 +31,11 @@ public interface SavedSkin {
     MComponent getName();
 
     /**
-     * Changes the display name of the skin
-     *
-     * @param name The new display name
-     */
-    void setName(MComponent name);
-
-    /**
      * Retrieves whether the skin will be excluded in random selections
      *
      * @return Whether the skin is excluded in random selections
      */
     boolean excludedFromRandom();
-
-    /**
-     * Changes whether the skin will be excluded in random selections
-     *
-     * @param exclude Whether the skin should be excluded in random selections
-     */
-    void excludeFromRandom(boolean exclude);
 
     /**
      * Retrieves the display item for the skin that will appear in GUIs
@@ -59,13 +45,6 @@ public interface SavedSkin {
     MItemStack getDisplayItem();
 
     /**
-     * Changes the display item for the skin that will appear in GUIs
-     *
-     * @param item The new item
-     */
-    void setDisplayItem(MItemStack item);
-
-    /**
      * Retrieves a head item with the skin applied to it
      *
      * @return A head item
@@ -73,18 +52,18 @@ public interface SavedSkin {
     MItemStack getHeadItem();
 
     /**
+     * Determines whether the head's item was auto-generated or customized in the config
+     *
+     * @return Whether the item is custom or not
+     */
+    boolean hasCustomItem();
+
+    /**
      * Retrieves a collection of all the groups the skin is a part of
      *
      * @return The list of groups
      */
     Collection<String> getGroups();
-
-    /**
-     * Adds a group to the skin
-     *
-     * @param group The group to add
-     */
-    void addGroup(String group);
 
     /**
      * Determines whether the skin has a particular group

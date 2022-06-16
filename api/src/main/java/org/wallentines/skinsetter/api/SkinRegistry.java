@@ -8,6 +8,8 @@ public interface SkinRegistry {
 
     SavedSkin getSkin(String id);
 
+    EditableSkin createEditableSkin(String id);
+
     Collection<SavedSkin> getAllSkins();
 
     Collection<SavedSkin> getSkins(String group);

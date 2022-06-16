@@ -3,6 +3,7 @@ package org.wallentines.skinsetter.common;
 import org.wallentines.midnightcore.api.player.MPlayer;
 import org.wallentines.midnightlib.config.ConfigSection;
 import org.wallentines.midnightlib.config.FileConfig;
+import org.wallentines.skinsetter.api.EditableSkin;
 import org.wallentines.skinsetter.api.SavedSkin;
 import org.wallentines.skinsetter.api.SkinRegistry;
 import org.wallentines.skinsetter.api.SkinSetterAPI;
@@ -17,7 +18,8 @@ public class SkinRegistryImpl implements SkinRegistry {
     private final List<SavedSkin> skins = new ArrayList<>();
     private final Set<String> groups = new HashSet<>();
     private final HashMap<String, Integer> skinsById = new HashMap<>();
-    private final HashMap<String, List<String>> skinNamesByFile = new HashMap<>();
+    private final HashMap<String, Set<String>> skinNamesByFile = new HashMap<>();
+    private final HashMap<String, String> fileNamesBySkin = new HashMap<>();
     private final Set<String> modifiedFiles = new HashSet<>();
 
     public SkinRegistryImpl(File baseFolder) {
@@ -32,6 +34,15 @@ public class SkinRegistryImpl implements SkinRegistry {
         if(index == null) return null;
 
         return skins.get(index);
+    }
+
+    @Override
+    public EditableSkin createEditableSkin(String id) {
+
+        SavedSkin sk = getSkin(id);
+        String file = fileNamesBySkin.get(id);
+
+        return new EditableSkinImpl(sk, this, file);
     }
 
     @Override
@@ -163,7 +174,9 @@ public class SkinRegistryImpl implements SkinRegistry {
         skinsById.put(skin.getId(), skins.size());
         skins.add(skin);
 
-        List<String> folderSkins = skinNamesByFile.computeIfAbsent(file, k -> new ArrayList<>());
+        fileNamesBySkin.put(skin.getId(), file);
+
+        Set<String> folderSkins = skinNamesByFile.computeIfAbsent(file, k -> new HashSet<>());
         folderSkins.add(skin.getId());
 
         modifiedFiles.add(file);
@@ -203,7 +216,7 @@ public class SkinRegistryImpl implements SkinRegistry {
                 groups = conf.getRoot().getStringList("groups");
             }
 
-            List<String> folderSkins = skinNamesByFile.computeIfAbsent(f.getName(), k -> new ArrayList<>());
+            Set<String> folderSkins = skinNamesByFile.computeIfAbsent(f.getName(), k -> new HashSet<>());
             for(ConfigSection sec : conf.getRoot().getListFiltered("skins", ConfigSection.class)) {
 
                 SavedSkin sk;
