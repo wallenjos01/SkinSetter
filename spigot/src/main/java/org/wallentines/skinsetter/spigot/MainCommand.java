@@ -20,6 +20,7 @@ import org.wallentines.midnightcore.common.util.MojangUtil;
 import org.wallentines.midnightcore.spigot.item.SpigotItem;
 import org.wallentines.midnightcore.spigot.player.SpigotPlayer;
 import org.wallentines.midnightcore.spigot.util.CommandUtil;
+import org.wallentines.skinsetter.api.EditableSkin;
 import org.wallentines.skinsetter.api.SavedSkin;
 import org.wallentines.skinsetter.api.SkinSetterAPI;
 import org.wallentines.skinsetter.common.SavedSkinImpl;
@@ -472,8 +473,8 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                     mpl = SpigotPlayer.wrap(((Player) sender));
                 }
 
-                saved = plugin.getAPI().getSkinRegistry().getSkin(args[1]);
-                if(saved == null || !saved.canUse(mpl)) {
+                EditableSkin editable = plugin.getAPI().getSkinRegistry().createEditableSkin(args[1]);
+                if(editable == null || !editable.canUse(mpl)) {
                     CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                     return true;
                 }
@@ -504,14 +505,18 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                                     return true;
                                 }
 
-                                saved.setDisplayItem(mpl.getItemInMainHand());
-                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.item.save.result", saved);
+                                editable.setDisplayItem(mpl.getItemInMainHand());
+                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.item.save.result", editable);
+
+                                editable.save();
 
                                 break;
                             case "clear":
 
-                                saved.setDisplayItem(null);
-                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.item.clear.result", saved);
+                                editable.setDisplayItem(null);
+                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.item.clear.result", editable);
+
+                                editable.save();
 
                                 break;
                             default:
@@ -536,9 +541,10 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                         }
 
                         MComponent name = MComponent.parse(builder.toString());
-                        saved.setName(name);
+                        editable.setName(name);
+                        editable.save();
 
-                        CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.name.result", saved);
+                        CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.name.result", editable);
                         break;
 
                     case "groups":
@@ -552,12 +558,14 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                         switch (args[3]) {
                             case "add":
 
-                                saved.addGroup(groupName);
+                                editable.addGroup(groupName);
+                                editable.save();
 
                                 break;
                             case "remove":
 
-                                saved.getGroups().remove(groupName);
+                                editable.removeGroup(groupName);
+                                editable.save();
 
                                 break;
                             default:
@@ -565,7 +573,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                                 return true;
                         }
 
-                        CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.groups.result", saved);
+                        CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.groups.result", editable);
                         break;
 
                     case "excludeInRandom":
@@ -578,15 +586,17 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                         switch (args[3]) {
                             case "true":
 
-                                saved.excludeFromRandom(true);
-                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.excludeInRandom.result.enabled", saved);
+                                editable.excludeFromRandom(true);
+                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.excludeInRandom.result.enabled", editable);
 
+                                editable.save();
                                 break;
                             case "false":
 
-                                saved.excludeFromRandom(false);
-                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.excludeInRandom.result.disabled", saved);
+                                editable.excludeFromRandom(false);
+                                CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.edit.excludeInRandom.result.disabled", editable);
 
+                                editable.save();
                                 break;
 
                             default:
