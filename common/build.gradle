@@ -5,6 +5,9 @@ repositories {
     }
 }
 
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
 dependencies {
 
     compileOnly 'com.mojang:authlib:2.1.28'

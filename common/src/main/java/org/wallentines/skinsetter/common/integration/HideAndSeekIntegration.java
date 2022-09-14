@@ -36,10 +36,12 @@ public class HideAndSeekIntegration {
     }
 
     private static Skin obtainSkin(Object o) {
-        if(o instanceof String s) {
+        if(o instanceof String) {
+            String s = (String) o;
             SavedSkin sk = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(s);
             return sk == null ? null : sk.getSkin();
-        } else if(o instanceof ConfigSection conf) {
+        } else if(o instanceof ConfigSection) {
+            ConfigSection conf = (ConfigSection) o;
             return Skin.SERIALIZER.deserialize(conf);
         }
         return null;

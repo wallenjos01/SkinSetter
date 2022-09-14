@@ -2,7 +2,7 @@ name: '${id}'
 main: '${group}.${id}.${target}.${mainClass}'
 version: '${version}'
 author: M1dnight_Ninja
-api-version: '${minecraftVersion}'
+api-version: '1.13'
 depend:
   - 'midnightcore'
 commands:
