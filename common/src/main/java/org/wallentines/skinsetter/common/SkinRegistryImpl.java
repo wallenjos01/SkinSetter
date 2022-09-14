@@ -184,6 +184,64 @@ public class SkinRegistryImpl implements SkinRegistry {
 
     }
 
+    public void deleteSkin(SavedSkin skin) {
+
+        String id = skin.getId();
+
+        if(!skinsById.containsKey(id)) {
+            throw new IllegalArgumentException("Attempt to delete an unregistered skin! (" + skin.getId() + ")");
+        }
+
+        String file = fileNamesBySkin.get(id);
+
+        int index = skinsById.remove(id);
+        skins.remove(index);
+
+        for(int i = index ; i < skins.size() ; i++) {
+            skinsById.put(skins.get(i).getId(), i);
+        }
+
+        modifiedFiles.add(file);
+        fileNamesBySkin.remove(id);
+
+        skinNamesByFile.get(file).remove(id);
+
+        HashSet<String> skinGroups = new HashSet<>(skin.getGroups());
+        for(String s : skin.getGroups()) {
+            if(!getSkins(s).isEmpty()) skinGroups.remove(s);
+        }
+
+        groups.removeAll(skinGroups);
+
+    }
+
+    void updateSkin(SavedSkin skin, String file) {
+
+        String id = skin.getId();
+        if(!skinsById.containsKey(id)) {
+            throw new IllegalArgumentException("Attempt to update an unregistered skin! (" + skin.getId() + ") Use registerSkin() to register a new skin!");
+        }
+
+        SavedSkin old = getSkin(id);
+        if(!old.getSkin().equals(skin.getSkin())) {
+            throw new IllegalArgumentException("Updated skin with ID " + skin.getId() + " contains different texture than originally registered skin!");
+        }
+
+        String oldFile = fileNamesBySkin.get(id);
+        if(!oldFile.equals(file)) {
+            throw new IllegalArgumentException("Updated skin with ID " + skin.getId() + " contains different file name than originally registered skin!");
+        }
+
+        int index = skinsById.get(id);
+        skins.set(index, skin);
+
+        for(String s : old.getGroups()) {
+            if(!skin.getGroups().contains(s) && getSkins(s).isEmpty()) groups.remove(s);
+        }
+
+        modifiedFiles.add(file);
+    }
+
     private static SavedSkin getRandomSkin(Collection<SavedSkin> skins) {
 
         final int index = Constants.RANDOM.nextInt(skins.size());
@@ -216,7 +274,6 @@ public class SkinRegistryImpl implements SkinRegistry {
                 groups = conf.getRoot().getStringList("groups");
             }
 
-            Set<String> folderSkins = skinNamesByFile.computeIfAbsent(f.getName(), k -> new HashSet<>());
             for(ConfigSection sec : conf.getRoot().getListFiltered("skins", ConfigSection.class)) {
 
                 SavedSkin sk;
@@ -228,16 +285,11 @@ public class SkinRegistryImpl implements SkinRegistry {
                     ex.printStackTrace();
                     continue;
                 }
+
                 if(groups != null) sk.getGroups().addAll(groups);
 
-                folderSkins.add(sk.getId());
-                if(skinsById.containsKey(sk.getId())) {
-                    throw new IllegalArgumentException("Attempt to register a skin with duplicate ID! (" + sk.getId() + ")");
-                }
-
-                this.groups.addAll(sk.getGroups());
-                skinsById.put(sk.getId(), skins.size());
-                skins.add(sk);
+                String fileName = f.getName().contains(".") ? f.getName().substring(0, f.getName().lastIndexOf(".")) : f.getName();
+                registerSkin(sk, fileName);
             }
 
         }

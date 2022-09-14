@@ -19,6 +19,7 @@ dependencies {
 
     implementation "org.spigotmc:spigot:${project.spigot_version}"
     implementation 'org.wallentines:midnightlib:1.0-SNAPSHOT'
+    implementation 'org.wallentines.midnightcore:common:1.0-SNAPSHOT'
     implementation 'org.wallentines.midnightcore:spigot:1.0-SNAPSHOT'
 
     implementation project(':api')

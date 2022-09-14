@@ -11,7 +11,7 @@
     "mixins": [ ],
     "depends": {
         "fabricloader": ">=${fabricLoader}",
-        "minecraft": "${minecraftVersion}"
+        "minecraft": ">=${minecraftVersion}"
     },
     "name": "${name}",
     "description": "${description}",

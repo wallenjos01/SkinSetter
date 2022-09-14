@@ -1,14 +1,12 @@
 package org.wallentines.skinsetter.spigot;
 
 import org.bukkit.command.PluginCommand;
-import org.wallentines.midnightlib.config.ConfigRegistry;
+import org.wallentines.midnightcore.spigot.config.YamlConfigProvider;
 import org.wallentines.midnightlib.config.ConfigSection;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.wallentines.midnightlib.config.serialization.json.JsonConfigProvider;
 import org.wallentines.skinsetter.common.SkinSetterImpl;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class SkinSetter extends JavaPlugin {
 
@@ -19,11 +17,11 @@ public class SkinSetter extends JavaPlugin {
     public void onEnable() {
 
         // Determine the data folder
-        Path dataFolder = Paths.get("config/SkinSetter");
+        Path dataFolder = getDataFolder().toPath();
 
         // Lang
-        ConfigSection langDefaults = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/lang/en_us.json"));
-        ConfigSection esp = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/lang/es_us.json"));
+        ConfigSection langDefaults = YamlConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/lang/en_us.yml"));
+        ConfigSection esp = YamlConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/lang/es_us.yml"));
 
         api = new SkinSetterImpl(dataFolder, langDefaults);
         api.getLangProvider().loadEntries(esp, "es_us");

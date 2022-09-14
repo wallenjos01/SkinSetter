@@ -37,7 +37,7 @@ public class EditableSkinImpl implements EditableSkin {
 
         this.name = sk.getName();
         this.excludeFromRandom = sk.excludedFromRandom();
-        this.displayItem = sk.getDisplayItem();
+        this.displayItem = sk.getCustomItem();
         this.customItem = sk.hasCustomItem();
 
         this.groups.addAll(sk.getGroups());
@@ -78,7 +78,7 @@ public class EditableSkinImpl implements EditableSkin {
     public void save() {
 
         SavedSkinImpl out = new SavedSkinImpl(id, skin, name, excludeFromRandom, displayItem, groups);
-        registry.registerSkin(out, file);
+        registry.updateSkin(out, file);
     }
 
     @Override
@@ -109,6 +109,11 @@ public class EditableSkinImpl implements EditableSkin {
     @Override
     public MItemStack getHeadItem() {
         return customItem ? SavedSkinImpl.generateHeadItem(skin, name) : displayItem;
+    }
+
+    @Override
+    public MItemStack getCustomItem() {
+        return customItem ? displayItem : null;
     }
 
     @Override

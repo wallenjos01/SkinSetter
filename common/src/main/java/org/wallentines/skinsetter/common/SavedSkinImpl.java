@@ -7,6 +7,7 @@ import org.wallentines.midnightcore.api.text.MComponent;
 import org.wallentines.midnightcore.api.text.MTextComponent;
 import org.wallentines.midnightlib.config.ConfigSection;
 import org.wallentines.midnightlib.config.serialization.ConfigSerializer;
+import org.wallentines.midnightlib.config.serialization.PrimitiveSerializers;
 import org.wallentines.skinsetter.api.SavedSkin;
 
 import java.util.*;
@@ -67,10 +68,11 @@ public class SavedSkinImpl implements SavedSkin {
         return cachedItem;
     }
 
-
+    @Override
     public MItemStack getCustomItem() {
         return customItem ? cachedItem : null;
     }
+
     @Override
     public MItemStack getHeadItem() {
         return customItem ? generateHeadItem(skin, name) : cachedItem;
@@ -111,12 +113,12 @@ public class SavedSkinImpl implements SavedSkin {
     }
 
     public static final ConfigSerializer<SavedSkinImpl> SERIALIZER = ConfigSerializer.create(
-            ConfigSerializer.entry(String.class, "id", SavedSkinImpl::getId),
-            ConfigSerializer.entry(Skin.class, "skin", SavedSkinImpl::getSkin),
-            ConfigSerializer.entry(MComponent.class, "name", SavedSkinImpl::getName).optional(),
-            ConfigSerializer.entry(Boolean.class, "in_random_selection", SavedSkinImpl::excludedFromRandom).orDefault(false),
+            ConfigSerializer.entry(PrimitiveSerializers.STRING, "id", SavedSkinImpl::getId),
+            ConfigSerializer.entry(Skin.SERIALIZER, "skin", SavedSkinImpl::getSkin),
+            ConfigSerializer.entry(MComponent.INLINE_SERIALIZER, "name", SavedSkinImpl::getName).optional(),
+            ConfigSerializer.entry(PrimitiveSerializers.BOOLEAN, "in_random_selection", SavedSkinImpl::excludedFromRandom).orDefault(true),
             ConfigSerializer.entry(MItemStack.class, "item", SavedSkinImpl::getCustomItem).optional(),
-            ConfigSerializer.<String, SavedSkinImpl>listEntry(String.class, "groups", sk -> new ArrayList<>(sk.getGroups())).optional(),
+            ConfigSerializer.<String, SavedSkinImpl>listEntry(PrimitiveSerializers.STRING, "groups", sk -> new ArrayList<>(sk.getGroups())).optional(),
             SavedSkinImpl::new
     );
 

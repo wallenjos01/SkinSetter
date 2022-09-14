@@ -52,6 +52,13 @@ public interface SavedSkin {
     MItemStack getHeadItem();
 
     /**
+     * Retrieves the item that has been customized in the config, or null if the item was auto-generated
+     *
+     * @return The display item
+     */
+    MItemStack getCustomItem();
+
+    /**
      * Determines whether the head's item was auto-generated or customized in the config
      *
      * @return Whether the item is custom or not

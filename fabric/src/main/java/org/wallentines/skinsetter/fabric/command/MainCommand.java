@@ -540,18 +540,22 @@ public class MainCommand {
 
     private static int executeEditName(CommandContext<CommandSourceStack> context, String skin, String name) {
 
-        EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
-        if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+        try {
+            EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
+            if (s == null) {
+                sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                return 0;
+            }
+
+            MComponent newName = MComponent.parse(name);
+            s.setName(newName);
+            s.save();
+
+            sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.name.result", s);
+        } catch (Throwable th) {
+            th.printStackTrace();
             return 0;
         }
-
-        MComponent newName = MComponent.parse(name);
-        s.setName(newName);
-        s.save();
-
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.name.result", s);
-
         return 1;
     }
 

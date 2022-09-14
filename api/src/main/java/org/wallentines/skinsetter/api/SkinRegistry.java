@@ -38,4 +38,6 @@ public interface SkinRegistry {
 
     void registerSkin(SavedSkin skin, String file);
 
+    void deleteSkin(SavedSkin skin);
+
 }
