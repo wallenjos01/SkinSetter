@@ -3,8 +3,8 @@ package org.wallentines.skinsetter.common.util;
 import org.wallentines.midnightcore.api.MidnightCoreAPI;
 import org.wallentines.midnightcore.api.item.InventoryGUI;
 import org.wallentines.midnightcore.api.item.MItemStack;
-import org.wallentines.midnightcore.api.module.lang.LangProvider;
 import org.wallentines.midnightcore.api.player.MPlayer;
+import org.wallentines.midnightcore.api.text.LangProvider;
 import org.wallentines.midnightlib.registry.Identifier;
 import org.wallentines.skinsetter.api.SavedSkin;
 

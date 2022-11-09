@@ -1,8 +1,7 @@
 package org.wallentines.skinsetter.common;
 
 import org.wallentines.midnightcore.api.MidnightCoreAPI;
-import org.wallentines.midnightcore.api.module.lang.LangModule;
-import org.wallentines.midnightcore.api.module.lang.LangProvider;
+import org.wallentines.midnightcore.api.text.LangProvider;
 import org.wallentines.midnightcore.common.util.FileUtil;
 import org.wallentines.midnightlib.config.ConfigSection;
 import org.wallentines.midnightlib.config.FileConfig;
@@ -49,7 +48,7 @@ public class SkinSetterImpl extends SkinSetterAPI {
             throw new IllegalStateException("Unable to create skin folder!");
         }
 
-        this.langProvider = MidnightCoreAPI.getInstance().getModuleManager().getModule(LangModule.class).createProvider(dataFolder.resolve("lang"), langDefaults);
+        this.langProvider = new LangProvider(dataFolder.resolve("lang"), langDefaults);
         this.skinRegistry = new SkinRegistryImpl(skinFolder);
 
         if(this.config.getRoot().has("skins", List.class)) {

@@ -18,7 +18,7 @@ public class SkinRegistryImpl implements SkinRegistry {
     private final List<SavedSkin> skins = new ArrayList<>();
     private final Set<String> groups = new HashSet<>();
     private final HashMap<String, Integer> skinsById = new HashMap<>();
-    private final HashMap<String, Set<String>> skinNamesByFile = new HashMap<>();
+    private final HashMap<String, List<String>> skinNamesByFile = new HashMap<>();
     private final HashMap<String, String> fileNamesBySkin = new HashMap<>();
     private final Set<String> modifiedFiles = new HashSet<>();
 
@@ -176,7 +176,7 @@ public class SkinRegistryImpl implements SkinRegistry {
 
         fileNamesBySkin.put(skin.getId(), file);
 
-        Set<String> folderSkins = skinNamesByFile.computeIfAbsent(file, k -> new HashSet<>());
+        List<String> folderSkins = skinNamesByFile.computeIfAbsent(file, k -> new ArrayList<>());
         folderSkins.add(skin.getId());
 
         modifiedFiles.add(file);

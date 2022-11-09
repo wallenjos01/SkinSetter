@@ -1,13 +1,11 @@
 package org.wallentines.skinsetter.common;
 
-import org.wallentines.midnightcore.api.MidnightCoreAPI;
-import org.wallentines.midnightcore.api.module.lang.LangModule;
-import org.wallentines.midnightcore.api.module.lang.PlaceholderSupplier;
+import org.wallentines.midnightcore.api.text.PlaceholderManager;
+import org.wallentines.midnightcore.api.text.PlaceholderSupplier;
 import org.wallentines.midnightlib.config.ConfigRegistry;
 import org.wallentines.midnightlib.config.ConfigSection;
 import org.wallentines.skinsetter.api.SavedSkin;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 public final class Constants {
@@ -27,9 +25,8 @@ public final class Constants {
 
         ConfigRegistry.INSTANCE.registerSerializer(SavedSkinImpl.class, SavedSkinImpl.SERIALIZER);
 
-        LangModule module = MidnightCoreAPI.getInstance().getModuleManager().getModule(LangModule.class);
-        module.registerInlinePlaceholder("skinsetter_skin_id", PlaceholderSupplier.create(SavedSkin.class, SavedSkin::getId));
-        module.registerPlaceholder("skinsetter_skin_name", PlaceholderSupplier.create(SavedSkin.class, SavedSkin::getName));
+        PlaceholderManager.INSTANCE.getInlinePlaceholders().register("skinsetter_skin_id", PlaceholderSupplier.create(SavedSkin.class, SavedSkin::getId));
+        PlaceholderManager.INSTANCE.getPlaceholders().register("skinsetter_skin_name", PlaceholderSupplier.create(SavedSkin.class, SavedSkin::getName));
     }
 
 }

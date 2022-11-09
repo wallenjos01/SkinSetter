@@ -21,17 +21,17 @@ import net.minecraft.world.item.ItemStack;
 import org.wallentines.midnightcore.api.MidnightCoreAPI;
 import org.wallentines.midnightcore.api.item.MItemStack;
 import org.wallentines.midnightcore.api.module.data.DataModule;
-import org.wallentines.midnightcore.api.module.lang.CustomPlaceholder;
-import org.wallentines.midnightcore.api.module.lang.CustomPlaceholderInline;
-import org.wallentines.midnightcore.api.module.lang.LangProvider;
 import org.wallentines.midnightcore.api.module.skin.Skin;
 import org.wallentines.midnightcore.api.module.skin.SkinModule;
 import org.wallentines.midnightcore.api.module.skin.Skinnable;
 import org.wallentines.midnightcore.api.player.MPlayer;
+import org.wallentines.midnightcore.api.text.CustomPlaceholder;
+import org.wallentines.midnightcore.api.text.CustomPlaceholderInline;
 import org.wallentines.midnightcore.api.text.MComponent;
 import org.wallentines.midnightcore.common.util.MojangUtil;
 import org.wallentines.midnightcore.fabric.item.FabricItem;
 import org.wallentines.midnightcore.fabric.player.FabricPlayer;
+import org.wallentines.midnightcore.fabric.util.CommandUtil;
 import org.wallentines.midnightcore.fabric.util.ConversionUtil;
 import org.wallentines.skinsetter.api.EditableSkin;
 import org.wallentines.skinsetter.api.SavedSkin;
@@ -255,7 +255,7 @@ public class MainCommand {
             } else {
 
                 if (s == null) {
-                    sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                    CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                     return 0;
                 }
 
@@ -263,7 +263,7 @@ public class MainCommand {
                     try {
                         if (!s.canUse(FabricPlayer.wrap(context.getSource().getPlayerOrException()))) {
                             SkinSetterAPI.getLogger().info("User cannot use");
-                            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                             return 0;
                         }
                     } catch (CommandSyntaxException ex) {
@@ -291,11 +291,11 @@ public class MainCommand {
 
 
         if(!Permissions.check(context.getSource(), "skinsetter.command.set.online", 2)) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(),"command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(),"command.error.invalid_skin");
             return 0;
         }
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.set.online", CustomPlaceholderInline.create("name", skin));
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.set.online", CustomPlaceholderInline.create("name", skin));
 
         MinecraftServer server = context.getSource().getServer();
         new Thread(() -> {
@@ -353,7 +353,7 @@ public class MainCommand {
         SavedSkin skin = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(skinId);
 
         if(skin == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
@@ -361,7 +361,7 @@ public class MainCommand {
         SkinSetterAPI.getInstance().getConfig().set("default_skin", skinId);
         SkinSetterAPI.getInstance().saveConfig();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.setdefault.result", skin, CustomPlaceholderInline.create("id", skinId));
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.setdefault.result", skin, CustomPlaceholderInline.create("id", skinId));
 
         return 1;
     }
@@ -372,7 +372,7 @@ public class MainCommand {
         SkinSetterAPI.getInstance().getConfig().set("default_skin", "");
         SkinSetterAPI.getInstance().saveConfig();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.cleardefault.result");
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.cleardefault.result");
 
         return 1;
     }
@@ -383,7 +383,7 @@ public class MainCommand {
         SkinSetterAPI.getInstance().getConfig().set("persistent_skins", true);
         SkinSetterAPI.getInstance().saveConfig();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.enable");
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.enable");
 
         return 1;
     }
@@ -394,7 +394,7 @@ public class MainCommand {
         SkinSetterAPI.getInstance().getConfig().set("persistent_skins", false);
         SkinSetterAPI.getInstance().saveConfig();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.disable");
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.disable");
 
         DataModule dataModule = MidnightCoreAPI.getInstance().getModuleManager().getModule(DataModule.class);
 
@@ -437,7 +437,7 @@ public class MainCommand {
             SavedSkin s = SkinSetterAPI.getInstance().getSkinRegistry().getRandomSkin(mpl, group);
             if(s == null) {
 
-                sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_saved");
+                CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_saved");
                 return 0;
             }
 
@@ -453,7 +453,7 @@ public class MainCommand {
 
         EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
         if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
@@ -461,7 +461,7 @@ public class MainCommand {
         s.save();
 
         String key = exclude ? "command.edit.excludeInRandom.result.enabled" : "command.edit.excludeInRandom.result.disabled";
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, key);
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, key);
 
         return 1;
     }
@@ -470,14 +470,14 @@ public class MainCommand {
 
         EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
         if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
         s.setDisplayItem(null);
         s.save();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.item.clear.result", s);
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.item.clear.result", s);
 
         return 1;
     }
@@ -486,19 +486,19 @@ public class MainCommand {
 
         EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
         if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
         if(is == null || is.isEmpty()) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_item");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_item");
             return 0;
         }
 
         s.setDisplayItem(new FabricItem(is));
         s.save();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.item.save.result", s);
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.item.save.result", s);
 
         return 1;
 
@@ -508,14 +508,14 @@ public class MainCommand {
 
         EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
         if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
         s.removeGroup(group);
         s.save();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.groups.result", s);
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.groups.result", s);
 
         return 1;
 
@@ -525,14 +525,14 @@ public class MainCommand {
 
         EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
         if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
         s.addGroup(group);
         s.save();
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.groups.result", s);
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.groups.result", s);
 
         return 1;
 
@@ -543,7 +543,7 @@ public class MainCommand {
         try {
             EditableSkin s = SkinSetterAPI.getInstance().getSkinRegistry().createEditableSkin(skin);
             if (s == null) {
-                sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+                CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
                 return 0;
             }
 
@@ -551,7 +551,7 @@ public class MainCommand {
             s.setName(newName);
             s.save();
 
-            sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.name.result", s);
+            CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.edit.name.result", s);
         } catch (Throwable th) {
             th.printStackTrace();
             return 0;
@@ -563,7 +563,7 @@ public class MainCommand {
 
         SavedSkin s = SkinSetterAPI.getInstance().getSkinRegistry().getSkin(skin);
         if(s == null) {
-            sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
+            CommandUtil.sendCommandFailure(context, SkinSetterAPI.getInstance().getLangProvider(), "command.error.invalid_skin");
             return 0;
         }
 
@@ -572,7 +572,7 @@ public class MainCommand {
             pl.addItem(((FabricItem) is).getInternal());
         }
 
-        sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.head.result", s);
+        CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false, "command.head.result", s);
 
         return players.size();
     }
@@ -588,36 +588,7 @@ public class MainCommand {
     private static CustomPlaceholder nameOf(Entity ent) {
         return CustomPlaceholder.create("entity_name", ConversionUtil.toMComponent(ent.getName()));
     }
-
-    public static void sendCommandSuccess(CommandContext<CommandSourceStack> context, LangProvider langProvider, boolean notify, String key, Object... args) {
-
-        MPlayer u = null;
-        try {
-            ServerPlayer pl = context.getSource().getPlayerOrException();
-            u = MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(pl.getUUID());
-
-        } catch(CommandSyntaxException ex) {
-            // Ignore
-        }
-
-        context.getSource().sendSuccess(ConversionUtil.toComponent(langProvider.getMessage(key, u, args)), notify);
-
-    }
     
-    public static void sendCommandFailure(CommandContext<CommandSourceStack> context, LangProvider langProvider, String key, Object... args) {
-
-        MPlayer u = null;
-        try {
-            ServerPlayer pl = context.getSource().getPlayerOrException();
-            u = MidnightCoreAPI.getInstance().getPlayerManager().getPlayer(pl.getUUID());
-
-        } catch(CommandSyntaxException ex) {
-            // Ignore
-        }
-
-        context.getSource().sendFailure(ConversionUtil.toComponent(langProvider.getMessage(key, u, args)));
-
-    }
 
 
 }
