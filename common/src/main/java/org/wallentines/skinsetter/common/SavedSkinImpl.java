@@ -59,7 +59,7 @@ public class SavedSkinImpl implements SavedSkin {
     }
 
     @Override
-    public boolean excludedFromRandom() {
+    public boolean inRandomSelection() {
         return excludeFromRandom;
     }
 
@@ -116,9 +116,9 @@ public class SavedSkinImpl implements SavedSkin {
             ConfigSerializer.entry(PrimitiveSerializers.STRING, "id", SavedSkinImpl::getId),
             ConfigSerializer.entry(Skin.SERIALIZER, "skin", SavedSkinImpl::getSkin),
             ConfigSerializer.entry(MComponent.INLINE_SERIALIZER, "name", SavedSkinImpl::getName).optional(),
-            ConfigSerializer.entry(PrimitiveSerializers.BOOLEAN, "in_random_selection", SavedSkinImpl::excludedFromRandom).orDefault(true),
+            ConfigSerializer.entry(PrimitiveSerializers.BOOLEAN, "in_random_selection", SavedSkinImpl::inRandomSelection).orDefault(true),
             ConfigSerializer.entry(MItemStack.class, "item", SavedSkinImpl::getCustomItem).optional(),
-            ConfigSerializer.<String, SavedSkinImpl>listEntry(PrimitiveSerializers.STRING, "groups", sk -> new ArrayList<>(sk.getGroups())).optional(),
+            PrimitiveSerializers.STRING.listOf().entry("groups", SavedSkinImpl::getGroups).optional(),
             SavedSkinImpl::new
     );
 

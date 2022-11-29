@@ -36,7 +36,7 @@ public class EditableSkinImpl implements EditableSkin {
         this.skin = sk.getSkin();
 
         this.name = sk.getName();
-        this.excludeFromRandom = sk.excludedFromRandom();
+        this.excludeFromRandom = sk.inRandomSelection();
         this.displayItem = sk.getCustomItem();
         this.customItem = sk.hasCustomItem();
 
@@ -97,7 +97,7 @@ public class EditableSkinImpl implements EditableSkin {
     }
 
     @Override
-    public boolean excludedFromRandom() {
+    public boolean inRandomSelection() {
         return excludeFromRandom;
     }
 

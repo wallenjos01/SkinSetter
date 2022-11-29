@@ -2,7 +2,6 @@ package org.wallentines.skinsetter.fabric;
 
 import net.fabricmc.api.ModInitializer;
 import org.wallentines.midnightcore.api.text.LangRegistry;
-import org.wallentines.midnightcore.fabric.event.MidnightCoreAPICreatedEvent;
 import org.wallentines.midnightcore.fabric.event.player.PlayerJoinEvent;
 import org.wallentines.midnightcore.fabric.event.player.PlayerLeaveEvent;
 import org.wallentines.midnightcore.fabric.event.server.CommandLoadEvent;
@@ -32,13 +31,11 @@ public class SkinSetter implements ModInitializer {
         ConfigSection langDefaults = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/skinsetter/lang/en_us.json"));
 
         // After Modules Loaded
-        Event.register(MidnightCoreAPICreatedEvent.class, this, event -> {
+        api = new SkinSetterImpl(dataFolder, langDefaults);
 
-            api = new SkinSetterImpl(dataFolder, langDefaults);
+        ConfigSection esp = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/skinsetter/lang/es_mx.json"));
+        api.getLangProvider().loadEntries("es_mx", LangRegistry.fromConfigSection(esp));
 
-            ConfigSection esp = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/skinsetter/lang/es_mx.json"));
-            api.getLangProvider().loadEntries("es_mx", LangRegistry.fromConfigSection(esp));
-        });
 
         // Events
         Event.register(CommandLoadEvent.class, this, event -> MainCommand.register(event.getDispatcher(), event.getBuildContext()));

@@ -31,11 +31,22 @@ public interface SavedSkin {
     MComponent getName();
 
     /**
+     * Retrieves whether the skin will be included in random selections
+     *
+     * @return Whether the skin is excluded in random selections
+     */
+    boolean inRandomSelection();
+
+    /**
      * Retrieves whether the skin will be excluded in random selections
      *
      * @return Whether the skin is excluded in random selections
      */
-    boolean excludedFromRandom();
+    @Deprecated
+    default boolean excludedFromRandom() {
+        return !inRandomSelection();
+    }
+
 
     /**
      * Retrieves the display item for the skin that will appear in GUIs

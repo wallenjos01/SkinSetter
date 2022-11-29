@@ -9,7 +9,12 @@ import org.wallentines.skinsetter.api.SkinRegistry;
 import org.wallentines.skinsetter.api.SkinSetterAPI;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SkinRegistryImpl implements SkinRegistry {
 
@@ -161,11 +166,16 @@ public class SkinRegistryImpl implements SkinRegistry {
     @Override
     public void registerSkin(SavedSkin skin) {
 
-        registerSkin(skin, "user");
+        registerSkin(skin, "user", true);
     }
 
     @Override
     public void registerSkin(SavedSkin skin, String file) {
+
+        registerSkin(skin, file, true);
+    }
+
+    public void registerSkin(SavedSkin skin, String file, boolean save) {
 
         if(skinsById.containsKey(skin.getId())) {
             throw new IllegalArgumentException("Attempt to register a skin with duplicate ID! (" + skin.getId() + ")");
@@ -179,7 +189,7 @@ public class SkinRegistryImpl implements SkinRegistry {
         List<String> folderSkins = skinNamesByFile.computeIfAbsent(file, k -> new ArrayList<>());
         folderSkins.add(skin.getId());
 
-        modifiedFiles.add(file);
+        if(save) modifiedFiles.add(file);
         groups.addAll(skin.getGroups());
 
     }
@@ -244,56 +254,55 @@ public class SkinRegistryImpl implements SkinRegistry {
 
     private static SavedSkin getRandomSkin(Collection<SavedSkin> skins) {
 
-        final int index = Constants.RANDOM.nextInt(skins.size());
-        int i = 0;
+        List<SavedSkin> filtered = skins.stream().filter(SavedSkin::inRandomSelection).collect(Collectors.toList());
 
-        for(SavedSkin sk : skins) {
-
-            if(i == index) return sk;
-            i++;
+        if(filtered.isEmpty()) {
+            return null;
         }
 
-        return null;
+        final int index = Constants.RANDOM.nextInt(filtered.size());
+        return filtered.get(index);
     }
 
     private void loadFolder(File baseFolder) {
 
         if(!baseFolder.isDirectory()) return;
 
-        File[] files = baseFolder.listFiles();
-        if(files == null) return;
+        try(Stream<Path> s = Files.list(baseFolder.toPath()).sorted()) {
 
-        for(File f : files) {
+            s.forEach(p -> {
+                File f = p.toFile();
+                FileConfig conf = FileConfig.fromFile(f);
 
-            FileConfig conf = FileConfig.fromFile(f);
-
-            List<String> groups;
-            if (!conf.getRoot().has("groups", List.class)) {
-                groups = null;
-            } else {
-                groups = conf.getRoot().getStringList("groups");
-            }
-
-            for(ConfigSection sec : conf.getRoot().getListFiltered("skins", ConfigSection.class)) {
-
-                SavedSkin sk;
-                try {
-                    sk = SavedSkinImpl.SERIALIZER.deserialize(sec);
-                } catch (Exception ex) {
-
-                    SkinSetterAPI.getLogger().warn("An error occurred while parsing a skin!");
-                    ex.printStackTrace();
-                    continue;
+                List<String> groups;
+                if (!conf.getRoot().has("groups", List.class)) {
+                    groups = null;
+                } else {
+                    groups = conf.getRoot().getStringList("groups");
                 }
 
-                if(groups != null) sk.getGroups().addAll(groups);
+                for(ConfigSection sec : conf.getRoot().getListFiltered("skins", ConfigSection.class)) {
 
-                String fileName = f.getName().contains(".") ? f.getName().substring(0, f.getName().lastIndexOf(".")) : f.getName();
-                registerSkin(sk, fileName);
-            }
+                    SavedSkin sk;
+                    try {
+                        sk = SavedSkinImpl.SERIALIZER.deserialize(sec);
+                    } catch (Exception ex) {
 
+                        SkinSetterAPI.getLogger().warn("An error occurred while parsing a skin!");
+                        ex.printStackTrace();
+                        continue;
+                    }
+
+                    if(groups != null) sk.getGroups().addAll(groups);
+
+                    String fileName = f.getName().contains(".") ? f.getName().substring(0, f.getName().lastIndexOf(".")) : f.getName();
+                    registerSkin(sk, fileName, false);
+                }
+            });
+        } catch (IOException ex) {
+
+            SkinSetterAPI.getLogger().warn("An error occurred while listing files!");
         }
-
     }
 
 }
