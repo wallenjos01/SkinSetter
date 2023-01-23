@@ -8,12 +8,14 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.wallentines.midnightcore.api.MidnightCoreAPI;
 import org.wallentines.midnightcore.api.item.MItemStack;
 import org.wallentines.midnightcore.api.module.data.DataModule;
 import org.wallentines.midnightcore.api.module.skin.Skin;
 import org.wallentines.midnightcore.api.module.skin.SkinModule;
 import org.wallentines.midnightcore.api.player.MPlayer;
+import org.wallentines.midnightcore.api.server.MServer;
 import org.wallentines.midnightcore.api.text.CustomPlaceholderInline;
 import org.wallentines.midnightcore.api.text.MComponent;
 import org.wallentines.midnightcore.common.util.MojangUtil;
@@ -43,7 +45,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         List<String> suggestions = new ArrayList<>();
 
         switch (args.length) {
@@ -174,7 +176,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String... args) {
+    public boolean onCommand(CommandSender sender, @NotNull Command cmd, @NotNull String label, String... args) {
         // Check permissions
         if(!sender.hasPermission("skinsetter.command")) {
             CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.no_permission");
@@ -258,7 +260,7 @@ public class MainCommand implements CommandExecutor, TabCompleter {
 
                         MPlayer mo = SpigotPlayer.wrap(other);
 
-                        SkinModule mod = MidnightCoreAPI.getInstance().getModuleManager().getModule(SkinModule.class);
+                        SkinModule mod = mo.getServer().getModule(SkinModule.class);
 
                         skin = original ? mod.getOriginalSkin(mo) : mod.getSkin(mo);
 
@@ -405,9 +407,12 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                     SkinSetterAPI.getInstance().getConfig().set("persistent_skins", false);
                     SkinSetterAPI.getInstance().saveConfig();
 
-                    DataModule mod = MidnightCoreAPI.getInstance().getModuleManager().getModule(DataModule.class);
+                    MServer server = MidnightCoreAPI.getRunningServer();
+                    if(server == null) break;
 
-                    for(MPlayer pl : MidnightCoreAPI.getInstance().getPlayerManager()) {
+                    DataModule mod = server.getModule(DataModule.class);
+
+                    for(MPlayer pl : server.getPlayerManager()) {
 
                         mod.getGlobalProvider().getData(pl).set("skinsetter", null);
                         mod.getGlobalProvider().saveData(pl);

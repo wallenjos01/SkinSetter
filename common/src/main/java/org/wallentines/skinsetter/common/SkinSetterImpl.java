@@ -48,6 +48,7 @@ public class SkinSetterImpl extends SkinSetterAPI {
             throw new IllegalStateException("Unable to create skin folder!");
         }
 
+        FileUtil.tryCreateDirectory(dataFolder.resolve("lang"));
         this.langProvider = new LangProvider(dataFolder.resolve("lang"), langDefaults);
         this.skinRegistry = new SkinRegistryImpl(skinFolder);
 

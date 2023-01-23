@@ -8,6 +8,7 @@ import org.wallentines.midnightlib.config.ConfigSection;
 
 import java.io.File;
 
+@SuppressWarnings("unused")
 public abstract class SkinSetterAPI {
 
     private static final Logger LOGGER = LogManager.getLogger("SkinSetter");

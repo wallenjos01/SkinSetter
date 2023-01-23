@@ -25,6 +25,7 @@ import org.wallentines.midnightcore.api.module.skin.Skin;
 import org.wallentines.midnightcore.api.module.skin.SkinModule;
 import org.wallentines.midnightcore.api.module.skin.Skinnable;
 import org.wallentines.midnightcore.api.player.MPlayer;
+import org.wallentines.midnightcore.api.server.MServer;
 import org.wallentines.midnightcore.api.text.CustomPlaceholder;
 import org.wallentines.midnightcore.api.text.CustomPlaceholderInline;
 import org.wallentines.midnightcore.api.text.MComponent;
@@ -229,6 +230,10 @@ public class MainCommand {
                         // Ignore
                     }
                 }
+                if(player == null) {
+                    return 0;
+                }
+
                 GuiUtil.openGUI(player,
                         SkinSetterAPI.getInstance().getLangProvider(),
                         SkinSetterAPI.getInstance().getSkinRegistry().getSkins(player, null),
@@ -250,7 +255,8 @@ public class MainCommand {
 
                 } else {
 
-                    sk = MidnightCoreAPI.getInstance().getModuleManager().getModule(SkinModule.class).getOriginalSkin(FabricPlayer.wrap(player));
+                    FabricPlayer fp = FabricPlayer.wrap(player);
+                    sk = fp.getServer().getModule(SkinModule.class).getOriginalSkin(fp);
                 }
             } else {
 
@@ -396,9 +402,12 @@ public class MainCommand {
 
         CommandUtil.sendCommandSuccess(context, SkinSetterAPI.getInstance().getLangProvider(), false,"command.persistence.result.disable");
 
-        DataModule dataModule = MidnightCoreAPI.getInstance().getModuleManager().getModule(DataModule.class);
+        MServer server = MidnightCoreAPI.getRunningServer();
+        if(server == null) return 0;
 
-        for(MPlayer pl : MidnightCoreAPI.getInstance().getPlayerManager()) {
+        DataModule dataModule = server.getModule(DataModule.class);
+
+        for(MPlayer pl : server.getPlayerManager()) {
 
             dataModule.getGlobalProvider().getData(pl).set(Constants.DEFAULT_NAMESPACE, null);
             dataModule.getGlobalProvider().saveData(pl);

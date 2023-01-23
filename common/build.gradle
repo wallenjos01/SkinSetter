@@ -10,7 +10,7 @@ targetCompatibility = JavaVersion.VERSION_11
 
 dependencies {
 
-    compileOnly 'com.mojang:authlib:3.11.49'
+    compileOnly 'com.mojang:authlib:2.1.28'
     compileOnly project(":api")
     compileOnly "org.wallentines.midnightcore:common:1.0-SNAPSHOT"
     compileOnly "org.wallentines.hideandseek:api:1.0-SNAPSHOT"

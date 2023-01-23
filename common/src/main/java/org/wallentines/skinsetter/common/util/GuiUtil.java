@@ -1,6 +1,5 @@
 package org.wallentines.skinsetter.common.util;
 
-import org.wallentines.midnightcore.api.MidnightCoreAPI;
 import org.wallentines.midnightcore.api.item.InventoryGUI;
 import org.wallentines.midnightcore.api.item.MItemStack;
 import org.wallentines.midnightcore.api.player.MPlayer;
@@ -15,7 +14,7 @@ public class GuiUtil {
 
     public static void openGUI(MPlayer player, LangProvider provider, Collection<SavedSkin> skins, Consumer<SavedSkin> out) {
 
-        InventoryGUI gui = MidnightCoreAPI.getInstance().createGUI(provider.getMessage("gui.set.title", player));
+        InventoryGUI gui = player.getServer().createInventoryGUI(provider.getMessage("gui.set.title", player));
 
         // Check if multiple pages will be necessary
         int pageSize = 54;

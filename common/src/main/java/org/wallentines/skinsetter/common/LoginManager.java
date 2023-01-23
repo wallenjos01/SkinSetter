@@ -6,6 +6,7 @@ import org.wallentines.midnightcore.api.module.data.DataProvider;
 import org.wallentines.midnightcore.api.module.skin.Skin;
 import org.wallentines.midnightcore.api.module.skin.SkinModule;
 import org.wallentines.midnightcore.api.player.MPlayer;
+import org.wallentines.midnightcore.common.module.data.DataModuleImpl;
 import org.wallentines.midnightlib.config.ConfigSection;
 import org.wallentines.skinsetter.api.SavedSkin;
 import org.wallentines.skinsetter.api.SkinRegistry;
@@ -15,7 +16,10 @@ public class LoginManager {
 
     public static void applyLoginSkin(MPlayer u, SkinRegistry registry) {
 
-        DataProvider dataProvider = MidnightCoreAPI.getInstance().getModuleManager().getModule(DataModule.class).getGlobalProvider();
+        DataModule module = MidnightCoreAPI.getModule(DataModule.class);
+        if(module == null) return;
+
+        DataProvider dataProvider = module.getGlobalProvider();
 
         if(SkinSetterAPI.getInstance().isPersistenceEnabled()) {
 
@@ -48,8 +52,16 @@ public class LoginManager {
 
     public static void savePersistentSkin(MPlayer u, SavedSkin defaultSkin) {
 
-        DataProvider dataProvider = MidnightCoreAPI.getInstance().getModuleManager().getModule(DataModule.class).getGlobalProvider();
-        SkinModule skinModule = MidnightCoreAPI.getInstance().getModuleManager().getModule(SkinModule.class);
+        DataModule mod = MidnightCoreAPI.getModule(DataModule.class);
+        if(mod == null) {
+            SkinSetterAPI.getLogger().warn("Unable to save persistent skin for " + u.getUsername() + "! The module [" + DataModuleImpl.ID + "] is unloaded!");
+            return;
+        }
+
+        DataProvider dataProvider = mod.getGlobalProvider();
+        SkinModule skinModule = MidnightCoreAPI.getModule(SkinModule.class);
+
+        if(skinModule == null) return;
 
         if(SkinSetterAPI.getInstance().isPersistenceEnabled()) {
 
