@@ -333,8 +333,14 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                 }
 
                 mp = SpigotPlayer.wrap(p);
+                Skin mpSkin = mp.getSkin();
 
-                SavedSkin sk = new SavedSkinImpl(id, mp.getSkin());
+                if(mpSkin == null) {
+                    CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.error.null_skin", mp);
+                    break;
+                }
+
+                SavedSkin sk = new SavedSkinImpl(id, mpSkin);
                 plugin.getAPI().getSkinRegistry().registerSkin(sk);
                 CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.save.result", mp, CustomPlaceholderInline.create("id", id));
                 break;

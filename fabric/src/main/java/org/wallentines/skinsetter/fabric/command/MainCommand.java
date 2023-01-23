@@ -347,7 +347,13 @@ public class MainCommand {
             return 0;
         }
 
-        SavedSkin sk = new SavedSkinImpl(id, ((Skinnable) player).getSkin());
+        Skin mpSkin = ((Skinnable) player).getSkin();
+        if(mpSkin == null) {
+            sendFeedback(context, "command.error.null_skin");
+            return 0;
+        }
+
+        SavedSkin sk = new SavedSkinImpl(id, mpSkin);
         SkinSetterAPI.getInstance().getSkinRegistry().registerSkin(sk);
         sendFeedback(context, "command.save.result", id, sk, nameOf(player));
 
