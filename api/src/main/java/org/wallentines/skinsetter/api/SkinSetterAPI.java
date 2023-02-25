@@ -3,8 +3,9 @@ package org.wallentines.skinsetter.api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.wallentines.midnightcore.api.player.DataProvider;
 import org.wallentines.midnightcore.api.text.LangProvider;
-import org.wallentines.midnightlib.config.ConfigSection;
+import org.wallentines.mdcfg.ConfigSection;
 
 import java.io.File;
 
@@ -78,6 +79,13 @@ public abstract class SkinSetterAPI {
      * @return the lang provider
      */
     public abstract LangProvider getLangProvider();
+
+    /**
+     * Retrieves the data provider for this mod instance
+     *
+     * @return the data provider
+     */
+    public abstract DataProvider getDataProvider();
 
 
     /**

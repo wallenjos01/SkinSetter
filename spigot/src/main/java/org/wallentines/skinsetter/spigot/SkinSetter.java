@@ -1,9 +1,10 @@
 package org.wallentines.skinsetter.spigot;
 
 import org.bukkit.command.PluginCommand;
+import org.wallentines.mdcfg.serializer.ConfigContext;
 import org.wallentines.midnightcore.api.text.LangRegistry;
-import org.wallentines.midnightcore.spigot.config.YamlConfigProvider;
-import org.wallentines.midnightlib.config.ConfigSection;
+import org.wallentines.midnightcore.spigot.config.YamlCodec;
+import org.wallentines.mdcfg.ConfigSection;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.wallentines.skinsetter.common.SkinSetterImpl;
 
@@ -21,8 +22,8 @@ public class SkinSetter extends JavaPlugin {
         Path dataFolder = getDataFolder().toPath();
 
         // Lang
-        ConfigSection langDefaults = YamlConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/lang/en_us.yml"));
-        ConfigSection esp = YamlConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/lang/es_mx.yml"));
+        ConfigSection langDefaults = YamlCodec.INSTANCE.decode(ConfigContext.INSTANCE, getClass().getResourceAsStream("/lang/en_us.yml")).asSection();
+        ConfigSection esp = YamlCodec.INSTANCE.decode(ConfigContext.INSTANCE, getClass().getResourceAsStream("/lang/es_mx.yml")).asSection();
 
         api = new SkinSetterImpl(dataFolder, langDefaults);
         api.getLangProvider().loadEntries("es_mx", LangRegistry.fromConfigSection(esp));

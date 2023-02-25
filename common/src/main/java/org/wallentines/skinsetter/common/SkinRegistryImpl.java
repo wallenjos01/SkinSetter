@@ -1,8 +1,12 @@
 package org.wallentines.skinsetter.common;
 
+import org.wallentines.mdcfg.ConfigList;
+import org.wallentines.mdcfg.serializer.ConfigContext;
+import org.wallentines.mdcfg.serializer.InlineSerializer;
+import org.wallentines.mdcfg.serializer.Serializer;
 import org.wallentines.midnightcore.api.player.MPlayer;
-import org.wallentines.midnightlib.config.ConfigSection;
-import org.wallentines.midnightlib.config.FileConfig;
+import org.wallentines.mdcfg.ConfigSection;
+import org.wallentines.midnightcore.api.FileConfig;
 import org.wallentines.skinsetter.api.EditableSkin;
 import org.wallentines.skinsetter.api.SavedSkin;
 import org.wallentines.skinsetter.api.SkinRegistry;
@@ -73,14 +77,11 @@ public class SkinRegistryImpl implements SkinRegistry {
     @Override
     public Collection<SavedSkin> getSkins(MPlayer user, String group) {
 
-        List<SavedSkin> out = new ArrayList<>();
-
-        Collection<SavedSkin> sks = getSkins(group);
-        for(SavedSkin sk : sks) {
-            if(sk.canUse(user)) out.add(sk);
+        if (user == null) {
+            return getSkins(group);
+        } else {
+            return getSkins(group).stream().filter(sk -> sk.canUse(user)).collect(Collectors.toList());
         }
-
-        return out;
     }
 
     @Override
@@ -151,9 +152,9 @@ public class SkinRegistryImpl implements SkinRegistry {
 
             FileConfig conf = FileConfig.findOrCreate(s, baseFolder);
 
-            List<SavedSkin> sks = new ArrayList<>();
+            ConfigList sks = new ConfigList();
             for(String name : skinNamesByFile.get(s)) {
-                sks.add(getSkin(name));
+                sks.add((SavedSkinImpl) getSkin(name), SavedSkinImpl.SERIALIZER);
             }
 
             conf.getRoot().set("skins", sks);
@@ -194,6 +195,7 @@ public class SkinRegistryImpl implements SkinRegistry {
 
     }
 
+    @Override
     public void deleteSkin(SavedSkin skin) {
 
         String id = skin.getId();
@@ -223,6 +225,11 @@ public class SkinRegistryImpl implements SkinRegistry {
 
         groups.removeAll(skinGroups);
 
+    }
+
+    @Override
+    public InlineSerializer<SavedSkin> nameSerializer() {
+        return InlineSerializer.of(SavedSkin::getId, this::getSkin);
     }
 
     void updateSkin(SavedSkin skin, String file) {
@@ -272,20 +279,22 @@ public class SkinRegistryImpl implements SkinRegistry {
 
             s.forEach(p -> {
                 File f = p.toFile();
-                FileConfig conf = FileConfig.fromFile(f);
+                FileConfig conf = new FileConfig(FileConfig.REGISTRY.forFile(f), f);
+                conf.load();
+                if(conf.getRoot() == null) return;
 
                 List<String> groups;
-                if (!conf.getRoot().has("groups", List.class)) {
+                if (!conf.getRoot().hasList("groups")) {
                     groups = null;
                 } else {
-                    groups = conf.getRoot().getStringList("groups");
+                    groups = conf.getRoot().getListFiltered("groups", Serializer.STRING);
                 }
 
-                for(ConfigSection sec : conf.getRoot().getListFiltered("skins", ConfigSection.class)) {
+                for(ConfigSection sec : conf.getRoot().getListFiltered("skins", ConfigSection.SERIALIZER)) {
 
                     SavedSkin sk;
                     try {
-                        sk = SavedSkinImpl.SERIALIZER.deserialize(sec);
+                        sk = SavedSkinImpl.SERIALIZER.deserialize(ConfigContext.INSTANCE, sec).getOrThrow();
                     } catch (Exception ex) {
 
                         SkinSetterAPI.getLogger().warn("An error occurred while parsing a skin!");

@@ -26,6 +26,7 @@ subprojects {
 
         compileOnly 'org.wallentines.midnightcore:api:1.0-SNAPSHOT'
         compileOnly 'org.wallentines:midnightlib:1.0-SNAPSHOT'
+        compileOnly 'org.wallentines:midnightcfg:1.0-SNAPSHOT'
     }
 
     java {

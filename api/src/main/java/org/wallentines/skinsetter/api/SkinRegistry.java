@@ -1,5 +1,6 @@
 package org.wallentines.skinsetter.api;
 
+import org.wallentines.mdcfg.serializer.InlineSerializer;
 import org.wallentines.midnightcore.api.player.MPlayer;
 
 import java.util.Collection;
@@ -39,5 +40,7 @@ public interface SkinRegistry {
     void registerSkin(SavedSkin skin, String file);
 
     void deleteSkin(SavedSkin skin);
+
+    InlineSerializer<SavedSkin> nameSerializer();
 
 }

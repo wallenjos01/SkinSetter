@@ -1,14 +1,14 @@
 package org.wallentines.skinsetter.fabric;
 
 import net.fabricmc.api.ModInitializer;
+import org.wallentines.mdcfg.codec.JSONCodec;
 import org.wallentines.midnightcore.api.text.LangRegistry;
 import org.wallentines.midnightcore.fabric.event.player.PlayerJoinEvent;
 import org.wallentines.midnightcore.fabric.event.player.PlayerLeaveEvent;
 import org.wallentines.midnightcore.fabric.event.server.CommandLoadEvent;
 import org.wallentines.midnightcore.fabric.event.server.ServerStopEvent;
 import org.wallentines.midnightcore.fabric.player.FabricPlayer;
-import org.wallentines.midnightlib.config.ConfigSection;
-import org.wallentines.midnightlib.config.serialization.json.JsonConfigProvider;
+import org.wallentines.mdcfg.ConfigSection;
 import org.wallentines.midnightlib.event.Event;
 import org.wallentines.skinsetter.common.LoginManager;
 import org.wallentines.skinsetter.common.SkinSetterImpl;
@@ -28,12 +28,12 @@ public class SkinSetter implements ModInitializer {
         Path dataFolder = Paths.get("config/SkinSetter");
 
         // Lang
-        ConfigSection langDefaults = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/skinsetter/lang/en_us.json"));
+        ConfigSection langDefaults = JSONCodec.loadConfig(getClass().getResourceAsStream("/skinsetter/lang/en_us.json")).asSection();
 
         // After Modules Loaded
         api = new SkinSetterImpl(dataFolder, langDefaults);
 
-        ConfigSection esp = JsonConfigProvider.INSTANCE.loadFromStream(getClass().getResourceAsStream("/skinsetter/lang/es_mx.json"));
+        ConfigSection esp = JSONCodec.loadConfig(getClass().getResourceAsStream("/skinsetter/lang/es_mx.json")).asSection();
         api.getLangProvider().loadEntries("es_mx", LangRegistry.fromConfigSection(esp));
 
 

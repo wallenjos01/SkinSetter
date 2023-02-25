@@ -1,10 +1,11 @@
 package org.wallentines.skinsetter.common;
 
 import org.wallentines.midnightcore.api.MidnightCoreAPI;
+import org.wallentines.midnightcore.api.player.DataProvider;
 import org.wallentines.midnightcore.api.text.LangProvider;
 import org.wallentines.midnightcore.common.util.FileUtil;
-import org.wallentines.midnightlib.config.ConfigSection;
-import org.wallentines.midnightlib.config.FileConfig;
+import org.wallentines.mdcfg.ConfigSection;
+import org.wallentines.midnightcore.api.FileConfig;
 import org.wallentines.skinsetter.api.SavedSkin;
 import org.wallentines.skinsetter.api.SkinRegistry;
 import org.wallentines.skinsetter.api.SkinSetterAPI;
@@ -12,7 +13,6 @@ import org.wallentines.skinsetter.common.integration.HideAndSeekIntegration;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
 
 public class SkinSetterImpl extends SkinSetterAPI {
 
@@ -21,6 +21,7 @@ public class SkinSetterImpl extends SkinSetterAPI {
 
     private final SkinRegistryImpl skinRegistry;
     private final LangProvider langProvider;
+    private final DataProvider dataProvider;
 
     private SavedSkin defaultSkin;
     private boolean persistence;
@@ -36,9 +37,6 @@ public class SkinSetterImpl extends SkinSetterAPI {
         }
 
         this.config = FileConfig.findOrCreate("config", this.dataFolder, Constants.CONFIG_DEFAULTS);
-        if(this.config == null) {
-            throw new IllegalStateException("Unable to create config!");
-        }
         this.config.getRoot().fill(Constants.CONFIG_DEFAULTS);
 
         Constants.registerIntegrations();
@@ -50,9 +48,10 @@ public class SkinSetterImpl extends SkinSetterAPI {
 
         FileUtil.tryCreateDirectory(dataFolder.resolve("lang"));
         this.langProvider = new LangProvider(dataFolder.resolve("lang"), langDefaults);
+        this.dataProvider = new DataProvider(FileUtil.tryCreateDirectory(dataFolder.resolve("data")));
         this.skinRegistry = new SkinRegistryImpl(skinFolder);
 
-        if(this.config.getRoot().has("skins", List.class)) {
+        if(this.config.getRoot().hasList("skins")) {
             MidnightCoreAPI.getLogger().info("Attempting to upgrade data from a pre-3.0 version of SkinSetter...");
             SavedSkinImpl.updateFromOldConfig(this.config.getRoot(), this.skinRegistry);
         }
@@ -123,6 +122,11 @@ public class SkinSetterImpl extends SkinSetterAPI {
     @Override
     public LangProvider getLangProvider() {
         return langProvider;
+    }
+
+    @Override
+    public DataProvider getDataProvider() {
+        return dataProvider;
     }
 
 }

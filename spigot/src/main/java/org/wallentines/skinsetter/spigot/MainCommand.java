@@ -11,9 +11,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.wallentines.midnightcore.api.MidnightCoreAPI;
 import org.wallentines.midnightcore.api.item.MItemStack;
-import org.wallentines.midnightcore.api.module.data.DataModule;
 import org.wallentines.midnightcore.api.module.skin.Skin;
 import org.wallentines.midnightcore.api.module.skin.SkinModule;
+import org.wallentines.midnightcore.api.player.DataProvider;
 import org.wallentines.midnightcore.api.player.MPlayer;
 import org.wallentines.midnightcore.api.server.MServer;
 import org.wallentines.midnightcore.api.text.CustomPlaceholderInline;
@@ -416,12 +416,11 @@ public class MainCommand implements CommandExecutor, TabCompleter {
                     MServer server = MidnightCoreAPI.getRunningServer();
                     if(server == null) break;
 
-                    DataModule mod = server.getModule(DataModule.class);
-
+                    DataProvider prov = SkinSetterAPI.getInstance().getDataProvider();
                     for(MPlayer pl : server.getPlayerManager()) {
 
-                        mod.getGlobalProvider().getData(pl).set("skinsetter", null);
-                        mod.getGlobalProvider().saveData(pl);
+                        prov.getData(pl).remove("skinsetter");
+                        prov.saveData(pl);
                     }
 
                     CommandUtil.sendFeedback(sender, SkinSetterAPI.getInstance().getLangProvider(), "command.persistence.result.disabled");
