@@ -35,7 +35,7 @@ public class SavedSkinImpl implements SavedSkin {
         this.name = name;
 
         this.groups = new HashSet<>();
-        this.groups.addAll(groups);
+        if(groups != null) this.groups.addAll(groups);
 
         this.excludeFromRandom = excludeFromRandom;
 

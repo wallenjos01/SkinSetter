@@ -34,7 +34,10 @@ public class GuiUtil {
         for(SavedSkin sk : skins) {
 
             int slot = (index % pageSize) + (54 * (index / pageSize));
-            gui.setItem(slot, sk.getDisplayItem(), (type, pl) -> out.accept(sk));
+            gui.setItem(slot, sk.getDisplayItem(), (type, pl) -> {
+                gui.close(pl);
+                out.accept(sk);
+            });
 
             index++;
         }

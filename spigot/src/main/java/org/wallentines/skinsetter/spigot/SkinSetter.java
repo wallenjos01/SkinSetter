@@ -37,7 +37,6 @@ public class SkinSetter extends JavaPlugin {
             cmd.setTabCompleter(exe);
         }
     }
-
     @Override
     public void onDisable() {
         api.getSkinRegistry().save();

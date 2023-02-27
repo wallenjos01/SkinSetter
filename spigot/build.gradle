@@ -20,10 +20,7 @@ tasks.assemble.dependsOn tasks.shadowJar
 
 dependencies {
 
-    compileOnly("org.spigotmc:spigot:${project.spigot_version}") {
-        transitive = false
-    }
-    compileOnly("org.spigotmc:spigot-api:${project.spigot_version}")
+    implementation("org.spigotmc:spigot:${project.spigot_version}")
     compileOnly('org.jetbrains:annotations:16.0.3')
 
     implementation 'org.wallentines:midnightlib:1.0-SNAPSHOT'

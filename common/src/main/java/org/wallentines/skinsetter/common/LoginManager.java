@@ -42,9 +42,9 @@ public class LoginManager {
         if(SkinSetterAPI.getInstance().isPersistenceEnabled()) {
 
             Skin originalSkin = skinModule.getOriginalSkin(u);
-            Skin currentSkin = skinModule.getSkin(u);
+            Skin currentSkin = u.getSkin();
 
-            if(currentSkin == originalSkin || currentSkin == defaultSkin.getSkin()) {
+            if(currentSkin.equals(originalSkin) || defaultSkin != null && currentSkin == defaultSkin.getSkin()) {
 
                 dataProvider.getData(u).remove(Constants.DEFAULT_NAMESPACE);
 
