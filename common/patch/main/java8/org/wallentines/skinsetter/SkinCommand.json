@@ -1,0 +1,8 @@
+[
+  {
+    "lines": [ "all" ],
+    "type": "replace",
+    "find": ".isEmpty()",
+    "replace": ".size() == 0"
+  }
+]

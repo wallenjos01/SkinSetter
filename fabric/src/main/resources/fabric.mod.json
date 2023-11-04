@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "version": "${version}",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "org.wallentines.skinsetter.Init"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "fabric-api-base": "*"
+  },
+  "name": "SkinSetter",
+  "description": "Change players' skins",
+  "contact": {
+    "homepage": "https://wallentines.org/"
+  },
+  "authors": [
+    {
+      "name": "M1dnight_Ninja"
+    }
+  ],
+  "license": "LGPL"
+}

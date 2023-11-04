@@ -1,0 +1,6 @@
+main: org.wallentines.skinsetter.SkinSetter
+name: ${id}
+version: ${version}
+api-version: 1.13
+author: M1dnight_Ninja
+depend: [ midnightcore ]

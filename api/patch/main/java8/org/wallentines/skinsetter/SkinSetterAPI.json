@@ -1,0 +1,8 @@
+[
+  {
+    "lines": [ "all" ],
+    "type": "replace",
+    "find": "List.copyOf(",
+    "replace": "new ArrayList<>("
+  }
+]
