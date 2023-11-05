@@ -307,15 +307,16 @@ public class SkinExecutor extends BukkitCommand {
                 }
             }
         }
-        else if(sender.hasPermission("skinsetter.command." + args[1])) {
+        else if(sender.hasPermission("skinsetter.command." + args[0])) {
             if (args.length == 2) {
-                switch (args[1]) {
+                switch (args[0]) {
                     case "set":
                     case "reset":
                     case "save":
                     case "setrandom":
                     case "item":
-                        return super.tabComplete(sender, alias, args);
+                        out.addAll(Bukkit.getServer().getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()));
+                        break;
                     case "persistence":
                         out.add("enable");
                         out.add("disable");
@@ -329,7 +330,7 @@ public class SkinExecutor extends BukkitCommand {
                         break;
                 }
             } else if (args.length == 3) {
-                switch (args[2]) {
+                switch (args[0]) {
                     case "set":
                     case "item":
                         addSkinNames(cph, out);
@@ -351,8 +352,8 @@ public class SkinExecutor extends BukkitCommand {
                         out.add("item");
                         break;
                 }
-            } else if(args.length == 4 && args[2].equals("edit")) {
-                switch (args[3]) {
+            } else if(args.length == 4 && args[0].equals("edit")) {
+                switch (args[1]) {
                     case "name":
                     case "permission":
                     case "item":

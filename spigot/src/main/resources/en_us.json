@@ -12,6 +12,8 @@
   "command.setrandom": "&aChanged the skin of &f%entity_name%",
   "command.setrandom.multiple": "&aChanged the skin of &f%count% &aentities",
   "command.set.online": "&aAttempting to download skin for user &f%name%",
+  "command.reset": "&aReset the skin of &f%entity_name%",
+  "command.reset.multiple": "&aReset the skin of &f%count% &aentities",
   "command.save": "&aSaved skin for user &f%entity_name% &aas &f%skin_id%",
   "command.item": "&aGave &f%player_name% &aa head for skin &f%skin_id%",
   "command.item.multiple": "&aGave &f%count% &aplayers a head for skin &f%skin_id%",

@@ -88,7 +88,7 @@ public class SavedSkin {
             Serializer.STRING.entry("id", sk -> ""),
             Skin.SERIALIZER.entry("skin", SavedSkin::getSkin),
             ConfigSerializer.INSTANCE.<SavedSkin>entry("name", ss -> ss.getConfig().getDisplayName()).optional(),
-            Serializer.BOOLEAN.<SavedSkin>entry("in_random_selection", ss -> !ss.getConfig().isExcludedInRandom()).orElse(false),
+            Serializer.BOOLEAN.<SavedSkin>entry("in_random_selection", ss -> !ss.getConfig().isExcludedInRandom()).orElse(true),
             ItemStack.SERIALIZER.<SavedSkin>entry("item", ss -> ss.getConfig().getDisplayItem()).optional(),
             Serializer.STRING.listOf().<SavedSkin>entry("groups", ss -> ss.getConfig().getGroups()).optional(),
             (id, sk, name, rand, item, groups) -> new SavedSkin(sk, new SkinConfiguration(name, "skinsetter.skin." + id, groups, !rand, false, item))
