@@ -14,6 +14,7 @@ import org.wallentines.mdcfg.ConfigPrimitive;
 import org.wallentines.mdcfg.serializer.ConfigContext;
 import org.wallentines.mdcfg.serializer.SerializeResult;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -57,7 +58,7 @@ public class SkinCommand {
                     sendMultiFeedback(targets, "command.set", feedback, CustomPlaceholder.inline("skin_id", skinId));
                 });
 
-                feedback.accept(LangContent.component(lang, "command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId)));
+                feedback.accept(LangContent.component(lang, "command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)));
                 return 2;
             }
 
@@ -85,7 +86,7 @@ public class SkinCommand {
         }
 
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
-        List<SavedSkin> sks = reg.getAllSkins(sender::hasPermission, SkinRegistry.ExcludeFlag.IN_GUI);
+        List<SavedSkin> sks = reg.getAllSkins(sender, null, SkinRegistry.ExcludeFlag.IN_GUI);
 
         if (reg.getSize() == 0) {
             feedback.accept(LangContent.component(lang, "error.no_skins_found"));
@@ -215,12 +216,12 @@ public class SkinCommand {
         return 1;
     }
 
-    public static int setRandom(Collection<Skinnable> targets, BiFunction<String, Integer, Boolean> permissionSupplier, Consumer<Component> feedback) {
+    public static int setRandom(Collection<Skinnable> targets, PermissionHolder permissionHolder, String group, Consumer<Component> feedback) {
 
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
-        List<SavedSkin> skins = reg.getAllSkins(permissionSupplier, SkinRegistry.ExcludeFlag.IN_RANDOM);
+        List<SavedSkin> skins = reg.getAllSkins(permissionHolder, group, SkinRegistry.ExcludeFlag.IN_RANDOM);
         if(skins.isEmpty()) {
             feedback.accept(LangContent.component(lang, "error.no_skins_found"));
             return 0;
@@ -235,14 +236,14 @@ public class SkinCommand {
         return targets.size();
     }
 
-    public static int item(Collection<Player> targets, String skinName, BiFunction<String, Integer, Boolean> permissionSupplier, Consumer<Component> feedback) {
+    public static int item(Collection<Player> targets, String skinName, PermissionHolder permissionHolder, Consumer<Component> feedback) {
 
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
         SavedSkin skin = reg.getSkin(skinName);
 
-        if(skin == null || skin.getPermission() != null && !permissionSupplier.apply(skin.getPermission(), 2)) {
+        if(skin == null || skin.getPermission() != null && !permissionHolder.hasPermission(skin.getPermission(), 2)) {
             feedback.accept(LangContent.component(lang, "error.skin_not_found", CustomPlaceholder.inline("skin_id", skinName)));
             return 0;
         }
@@ -413,10 +414,15 @@ public class SkinCommand {
 
     private static void sendMultiFeedback(Collection<?> targets, String key, Consumer<Component> feedback, Object arg) {
 
+        List<Object> args = new ArrayList<>();
+        if(arg != null) args.add(arg);
+
         if(targets.size() == 1) {
-            feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), key, arg, targets.iterator().next()));
+            args.add(targets.iterator().next());
+            feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), key, args));
         } else {
-            feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), key + ".multiple", arg, CustomPlaceholder.inline("count", targets.size())));
+            args.add(CustomPlaceholder.inline("count", targets.size()));
+            feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), key + ".multiple", args));
         }
 
     }

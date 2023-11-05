@@ -5,6 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.wallentines.mcore.CommandPermissionHolder;
 import org.wallentines.mcore.Server;
 import org.wallentines.mcore.SpigotPlayer;
 import org.wallentines.mcore.adapter.Adapter;
@@ -13,24 +14,25 @@ import org.wallentines.mcore.lang.LangContent;
 import org.wallentines.mcore.text.Component;
 import org.wallentines.mcore.text.ComponentResolver;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SkinExecutor extends BukkitCommand {
 
     protected SkinExecutor() {
         super("skin");
     }
+    private static final String[] subCommands = { "set", "reset", "save", "setrandom", "item", "persistence", "setdefault", "cleardefault", "edit", "reload" };
 
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) {
 
         if(args.length == 0) {
 
-            String[] subs = { "set", "reset", "save", "setrandom", "item", "persistence", "setdefault", "cleardefault", "edit", "reload" };
-
             StringBuilder usage = new StringBuilder("/skin <");
             int subcommands = 0;
-            for(String s : subs) {
+            for(String s : subCommands) {
                 if(sender.hasPermission("skinsetter.command." + s)) {
                     if (subcommands++ > 0) {
                         usage.append("/");
@@ -154,15 +156,20 @@ public class SkinExecutor extends BukkitCommand {
 
     private void setRandom(CommandSender sender, String[] args) {
 
-        if(args.length == 1) {
+        if(args.length <= 1) {
             sendMessage(sender, usage("/skin setrandom <player>"));
             return;
+        }
+
+        String group = null;
+        if(args.length > 2) {
+            group = args[2];
         }
 
         SpigotPlayer spl = getPlayer(sender, args);
         if(spl == null) return;
 
-        SkinCommand.setRandom(List.of(spl), (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+        SkinCommand.setRandom(List.of(spl), CommandPermissionHolder.of(sender), group, cmp -> sendMessage(sender, cmp));
     }
 
     private void item(CommandSender sender, String[] args) {
@@ -176,7 +183,7 @@ public class SkinExecutor extends BukkitCommand {
         if(spl == null) return;
 
         String skin = args[2];
-        SkinCommand.item(List.of(spl), skin, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+        SkinCommand.item(List.of(spl), skin, CommandPermissionHolder.of(sender), cmp -> sendMessage(sender, cmp));
     }
 
     private void persistence(CommandSender sender, String[] args) {
@@ -282,10 +289,83 @@ public class SkinExecutor extends BukkitCommand {
     }
 
 
+    private void addSkinNames(CommandPermissionHolder sender, List<String> list) {
+        list.addAll(SkinSetterAPI.REGISTRY.get().getSkinIds(sender, null, SkinRegistry.ExcludeFlag.NONE));
+    }
+
     @NotNull
     @Override
     public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
-        return super.tabComplete(sender, alias, args);
+
+        CommandPermissionHolder cph = CommandPermissionHolder.of(sender);
+
+        List<String> out = new ArrayList<>();
+        if(args.length == 0 || args.length == 1) {
+            for(String s : subCommands) {
+                if(sender.hasPermission("skinsetter.command." + s)) {
+                    out.add(s);
+                }
+            }
+        }
+        else if(sender.hasPermission("skinsetter.command." + args[1])) {
+            if (args.length == 2) {
+                switch (args[1]) {
+                    case "set":
+                    case "reset":
+                    case "save":
+                    case "setrandom":
+                    case "item":
+                        return super.tabComplete(sender, alias, args);
+                    case "persistence":
+                        out.add("enable");
+                        out.add("disable");
+                        break;
+                    case "setdefault":
+                    case "edit":
+                        addSkinNames(cph, out);
+                        break;
+                    case "cleardefault":
+                    case "reload":
+                        break;
+                }
+            } else if (args.length == 3) {
+                switch (args[2]) {
+                    case "set":
+                    case "item":
+                        addSkinNames(cph, out);
+                        break;
+                    case "save":
+                    case "persistence":
+                    case "reset":
+                    case "setdefault":
+                    case "cleardefault":
+                        break;
+                    case "setrandom":
+                        out.addAll(SkinSetterAPI.REGISTRY.get().getGroupNames(cph, SkinRegistry.ExcludeFlag.IN_RANDOM));
+                        break;
+                    case "edit":
+                        out.add("name");
+                        out.add("permission");
+                        out.add("excludeInRandom");
+                        out.add("excludeInGui");
+                        out.add("item");
+                        break;
+                }
+            } else if(args.length == 4 && args[2].equals("edit")) {
+                switch (args[3]) {
+                    case "name":
+                    case "permission":
+                    case "item":
+                        break;
+                    case "excludeInRandom":
+                    case "excludeInGui":
+                        out.add("true");
+                        out.add("false");
+                }
+            }
+        }
+
+        return out.stream().filter(str -> str.startsWith(args[args.length - 1])).collect(Collectors.toList());
     }
 
     private SpigotPlayer getPlayer(CommandSender sender, String[] args) {

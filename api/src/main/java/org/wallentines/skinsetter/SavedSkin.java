@@ -10,7 +10,7 @@ import org.wallentines.mdcfg.serializer.SerializeContext;
 import org.wallentines.mdcfg.serializer.SerializeResult;
 import org.wallentines.mdcfg.serializer.Serializer;
 
-import java.util.List;
+import java.util.Set;
 
 public class SavedSkin {
     private final Skin skin;
@@ -37,7 +37,7 @@ public class SavedSkin {
         return skin;
     }
 
-    public List<String> getGroups() {
+    public Set<String> getGroups() {
         return config.getGroups();
     }
 

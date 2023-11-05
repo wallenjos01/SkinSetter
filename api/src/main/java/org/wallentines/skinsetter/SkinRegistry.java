@@ -1,14 +1,11 @@
 package org.wallentines.skinsetter;
 
 import org.wallentines.mcore.MidnightCoreAPI;
+import org.wallentines.mcore.PermissionHolder;
 import org.wallentines.midnightlib.registry.StringRegistry;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.function.BiFunction;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class SkinRegistry {
@@ -91,11 +88,42 @@ public class SkinRegistry {
         return filesBySkin.keySet();
     }
 
-    public List<SavedSkin> getSkins(int offset, int count) {
-        return getSkins(offset, count, (perm, lvl) -> true, ExcludeFlag.NONE);
+    public Collection<String> getSkinIds(PermissionHolder permissionHolder, String group, ExcludeFlag exclude) {
+
+        if(loadedFiles.getSize() == 0) return new ArrayList<>();
+
+        List<String> out = new ArrayList<>();
+
+        for(SkinFile file : loadedFiles) {
+            for(int i = 0 ; i < file.getSize() ; i++) {
+                SavedSkin sk = file.getSkin(i);
+                if(matches(sk, permissionHolder, group, exclude)) {
+                    out.add(file.getId(i));
+                }
+            }
+        }
+        return out;
     }
 
-    public List<SavedSkin> getSkins(int offset, int count, BiFunction<String, Integer, Boolean> permissionChecker, ExcludeFlag exclude) {
+    public Set<String> getGroupNames(PermissionHolder permissionHolder, ExcludeFlag exclude) {
+        Set<String> out = new HashSet<>();
+        for(SavedSkin sk : getAllSkins(permissionHolder, null, exclude)) {
+            out.addAll(sk.getGroups());
+        }
+        return out;
+    }
+
+    private boolean matches(SavedSkin sk, PermissionHolder permissionHolder, String group, ExcludeFlag exclude) {
+        return (sk.getPermission() == null || permissionHolder.hasPermission(sk.getPermission(), 2))
+                && !exclude.checker.test(sk)
+                && (group == null || sk.getGroups().contains(group));
+    }
+
+    public List<SavedSkin> getSkins(int offset, int count) {
+        return getSkins(offset, count, PermissionHolder.ALL, null, ExcludeFlag.NONE);
+    }
+
+    public List<SavedSkin> getSkins(int offset, int count, PermissionHolder permissionHolder, String group, ExcludeFlag exclude) {
 
         if(loadedFiles.getSize() == 0) return new ArrayList<>();
 
@@ -108,7 +136,7 @@ public class SkinRegistry {
 
             for(String id : file.getSkinIds()) {
                 SavedSkin sk = file.getSkin(id);
-                if((sk.getPermission() == null || permissionChecker.apply(sk.getPermission(), 2)) && !exclude.checker.test(sk)) {
+                if(matches(sk, permissionHolder, group, exclude)) {
                     matching++;
                 }
             }
@@ -126,7 +154,7 @@ public class SkinRegistry {
             SkinFile file = loadedFiles.valueAtIndex(currentFile);
             for (int i = diff; i < file.getSize() && skins < count; i++) {
                 SavedSkin sk = file.getSkin(i);
-                if((sk.getPermission() == null || permissionChecker.apply(sk.getPermission(), 2)) && !exclude.checker.test(sk)) {
+                if(matches(sk, permissionHolder, group, exclude)) {
                     out.add(sk);
                 }
                 skins++;
@@ -142,8 +170,8 @@ public class SkinRegistry {
         return getSkins(0, getSize());
     }
 
-    public List<SavedSkin> getAllSkins(BiFunction<String, Integer, Boolean> permissionChecker, ExcludeFlag exclude) {
-        return getSkins(0, getSize(), permissionChecker, exclude);
+    public List<SavedSkin> getAllSkins(PermissionHolder permissionHolder, String group, ExcludeFlag exclude) {
+        return getSkins(0, getSize(), permissionHolder, group, exclude);
     }
 
     public SavedSkin getSkin(String id) {

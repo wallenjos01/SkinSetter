@@ -7,15 +7,13 @@ import org.wallentines.mcore.text.ConfigSerializer;
 import org.wallentines.mdcfg.serializer.ObjectSerializer;
 import org.wallentines.mdcfg.serializer.Serializer;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class SkinConfiguration {
 
     private final Component name;
     private final String permission;
-    private final List<String> groups = new ArrayList<>();
+    private final Set<String> groups = new HashSet<>();
     private final Boolean excludedInRandom;
     private final Boolean excludedInGUI;
     private final ItemStack displayItem;
@@ -37,7 +35,7 @@ public class SkinConfiguration {
         return permission;
     }
 
-    public List<String> getGroups() {
+    public Set<String> getGroups() {
         return groups;
     }
 

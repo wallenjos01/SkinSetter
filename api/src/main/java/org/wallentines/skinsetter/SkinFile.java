@@ -1,6 +1,7 @@
 package org.wallentines.skinsetter;
 
 import org.jetbrains.annotations.NotNull;
+import org.wallentines.mcore.MidnightCoreAPI;
 import org.wallentines.mcore.Skin;
 import org.wallentines.mcore.lang.CustomPlaceholder;
 import org.wallentines.mcore.lang.PlaceholderContext;
@@ -50,6 +51,7 @@ public class SkinFile {
 
         ConfigObject obj = file.getRoot().asSection().get("skins");
         if(obj == null) {
+            MidnightCoreAPI.LOGGER.warn("Skin file does not have a skin section!");
             return;
         }
 
@@ -83,12 +85,14 @@ public class SkinFile {
 
                     SavedSkin saved = result.getOrThrow();
                     skins.register(id, RegisteredSkin.create(id, id, defaults, saved.getSkin(), saved.getConfig()));
-                    hasChanged = true;
 
                 } else {
                     SkinSetterAPI.LOGGER.error("Unable to deserialize legacy skin in file " + file.getFile().getName() + "! " + result.getError());
                 }
             }
+            save();
+        } else {
+            MidnightCoreAPI.LOGGER.warn("Skin file has invalid skin section!");
         }
     }
 
@@ -104,6 +108,10 @@ public class SkinFile {
         RegisteredSkin out = skins.valueAtIndex(index);
         if(out == null) return null;
         return out.registered;
+    }
+
+    public String getId(int index) {
+        return skins.idAtIndex(index);
     }
 
     public SkinConfiguration getSavedConfiguration(String name) {
