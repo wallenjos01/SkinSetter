@@ -57,6 +57,7 @@ tasks.assemble {
 
 repositories {
     maven("https://libraries.minecraft.net/")
+    maven("https://maven.wallentines.org/")
     mavenLocal()
 }
 

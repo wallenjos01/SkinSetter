@@ -67,50 +67,54 @@ public class SkinExecutor extends BukkitCommand {
 
     private void set(CommandSender sender, String[] args) {
 
-        if(args.length == 1) {
+        try {
+            if (args.length == 1) {
 
-            String usage = "/skin set <player> [<skin>]";
-            if(sender.hasPermission("skinsetter.command.set.online")) {
-                usage += " [-o]";
-            }
-            sendMessage(sender, usage(usage));
-            return;
-        }
-
-        Server server = Server.RUNNING_SERVER.get();
-        Player target = Bukkit.getPlayer(args[1]);
-        if(target == null) {
-            sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.player_not_found"));
-            return;
-        }
-
-        if(args.length == 2) {
-
-            if(!(sender instanceof Player)) {
-                sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.not_player"));
-                return;
-            }
-
-            SpigotPlayer spl = new SpigotPlayer(server, (Player) sender);
-            SkinCommand.setGUI(spl, List.of(new SpigotPlayer(server, target)), cmp -> sendMessage(sender, cmp));
-            return;
-        }
-
-        if(args.length == 3) {
-            SkinCommand.set(List.of(new SpigotPlayer(server, target)), args[2], false, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
-            return;
-        }
-
-        if(args.length == 4) {
-            if(!args[3].equals("-o")) {
                 String usage = "/skin set <player> [<skin>]";
-                if(sender.hasPermission("skinsetter.command.set.online")) {
+                if (sender.hasPermission("skinsetter.command.set.online")) {
                     usage += " [-o]";
                 }
                 sendMessage(sender, usage(usage));
                 return;
             }
-            SkinCommand.set(List.of(new SpigotPlayer(server, target)), args[2], true, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+
+            Server server = Server.RUNNING_SERVER.get();
+            Player target = Bukkit.getPlayer(args[1]);
+            if (target == null) {
+                sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.player_not_found"));
+                return;
+            }
+
+            if (args.length == 2) {
+
+                if (!(sender instanceof Player)) {
+                    sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.not_player"));
+                    return;
+                }
+
+                SpigotPlayer spl = new SpigotPlayer(server, (Player) sender);
+                SkinCommand.setGUI(spl, List.of(new SpigotPlayer(server, target)), cmp -> sendMessage(sender, cmp));
+                return;
+            }
+
+            if (args.length == 3) {
+                SkinCommand.set(List.of(new SpigotPlayer(server, target)), args[2], false, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+                return;
+            }
+
+            if (args.length == 4) {
+                if (!args[3].equals("-o")) {
+                    String usage = "/skin set <player> [<skin>]";
+                    if (sender.hasPermission("skinsetter.command.set.online")) {
+                        usage += " [-o]";
+                    }
+                    sendMessage(sender, usage(usage));
+                    return;
+                }
+                SkinCommand.set(List.of(new SpigotPlayer(server, target)), args[2], true, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+            }
+        } catch (Exception ex) {
+            SkinSetterAPI.LOGGER.error("An error occurred while settings a skin!", ex);
         }
     }
 

@@ -4,6 +4,8 @@ import org.wallentines.mcore.ItemStack;
 import org.wallentines.mcore.Player;
 import org.wallentines.mcore.Skin;
 import org.wallentines.mcore.text.Component;
+import org.wallentines.mcore.text.ConfigSerializer;
+import org.wallentines.mdcfg.serializer.ObjectSerializer;
 import org.wallentines.mdcfg.serializer.SerializeContext;
 import org.wallentines.mdcfg.serializer.SerializeResult;
 import org.wallentines.mdcfg.serializer.Serializer;
@@ -81,5 +83,14 @@ public class SavedSkin {
                     );
         }
     };
+
+    public static final Serializer<SavedSkin> LEGACY_SERIALIZER = ObjectSerializer.create(
+            Skin.SERIALIZER.entry("skin", SavedSkin::getSkin),
+            ConfigSerializer.INSTANCE.<SavedSkin>entry("name", ss -> ss.getConfig().getDisplayName()).optional(),
+            Serializer.BOOLEAN.<SavedSkin>entry("in_random_selection", ss -> !ss.getConfig().isExcludedInRandom()).orElse(false),
+            ItemStack.SERIALIZER.<SavedSkin>entry("item", ss -> ss.getConfig().getDisplayItem()).optional(),
+            Serializer.STRING.listOf().<SavedSkin>entry("groups", ss -> ss.getConfig().getGroups()).optional(),
+            (sk, name, rand, item, groups) -> new SavedSkin(sk, new SkinConfiguration(name, null, groups, !rand, false, item))
+    );
 
 }

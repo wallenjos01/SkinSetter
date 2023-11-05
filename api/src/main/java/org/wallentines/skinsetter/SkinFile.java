@@ -47,10 +47,17 @@ public class SkinFile {
 
 
         defaults = file.getRoot().asSection().getOptional("defaults", PropertyDefaults.SERIALIZER).orElse(new PropertyDefaults());
-        file.getRoot().asSection().getOptional("skins", ConfigSection.SERIALIZER).ifPresent(sec -> {
-            for(String key : sec.getKeys()) {
 
-                SerializeResult<SavedSkin> result = SavedSkin.SERIALIZER.deserialize(ConfigContext.INSTANCE, sec.get(key));
+        ConfigObject obj = file.getRoot().asSection().get("skins");
+        if(obj == null) {
+            return;
+        }
+
+        // v4.0 file
+        if(obj.isSection()) {
+            for(String key : obj.asSection().getKeys()) {
+
+                SerializeResult<SavedSkin> result = SavedSkin.SERIALIZER.deserialize(ConfigContext.INSTANCE, obj.asSection().get(key));
                 if(result.isComplete()) {
 
                     String finalKey = defaults.applyId(key);
@@ -63,7 +70,26 @@ public class SkinFile {
                     SkinSetterAPI.LOGGER.error("Unable to deserialize skin with ID " + key + "! " + result.getError());
                 }
             }
-        });
+
+        // v3.0 file
+        } else if(obj.isList()) {
+
+            for(ConfigObject skin : obj.asList().values()) {
+
+                SerializeResult<SavedSkin> result = SavedSkin.LEGACY_SERIALIZER.deserialize(ConfigContext.INSTANCE, skin);
+                if(result.isComplete()) {
+
+                    String id = skin.asSection().getString("id");
+
+                    SavedSkin saved = result.getOrThrow();
+                    skins.register(id, RegisteredSkin.create(id, id, defaults, saved.getSkin(), saved.getConfig()));
+                    hasChanged = true;
+
+                } else {
+                    SkinSetterAPI.LOGGER.error("Unable to deserialize legacy skin in file " + file.getFile().getName() + "! " + result.getError());
+                }
+            }
+        }
     }
 
     public SavedSkin getSkin(String name) {

@@ -49,6 +49,8 @@ repositories {
         mavenContent { snapshotsOnly() }
     }
     maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven("https://maven.wallentines.org/")
+    mavenLocal()
 }
 
 
