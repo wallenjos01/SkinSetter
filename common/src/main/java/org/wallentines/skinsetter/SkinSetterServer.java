@@ -47,6 +47,8 @@ public class SkinSetterServer {
         config.save();
 
         manager = new LangManager(langDefaults, folderPath.resolve("lang").toFile());
+        manager.saveLanguageDefaults("en_us", langDefaults);
+
         SkinSetterAPI.REGISTRY.set(new SkinRegistry(folderPath.resolve("skins").toFile()));
 
         dataManager = new DataManager(folderPath.resolve("users").toFile());
