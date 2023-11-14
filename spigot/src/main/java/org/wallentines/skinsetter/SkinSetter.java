@@ -32,6 +32,12 @@ public class SkinSetter extends JavaPlugin implements Listener {
                 MidnightCoreAPI.LOGGER.error("Unable to enable SkinSetter! Lang defaults are missing or malformed!", ex);
                 return;
             }
+            srv.shutdownEvent().register(this, ev -> {
+                SkinSetterServer sks = SkinSetterServer.INSTANCE.getOrNull();
+                if(sks != null) {
+                    sks.onShutdown();
+                }
+            });
             SkinSetterServer.init(srv, LangRegistry.fromConfig(lang, PlaceholderManager.INSTANCE));
         });
 
@@ -43,8 +49,6 @@ public class SkinSetter extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-
-
 
     }
 
