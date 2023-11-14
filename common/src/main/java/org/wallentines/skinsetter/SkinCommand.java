@@ -272,7 +272,7 @@ public class SkinCommand {
         SavedSkin sk = getSkinOrFeedback(skinId, feedback);
         if(sk == null) return 0;
 
-        SkinSetterServer.INSTANCE.get().setDefaultSkin(sk);
+        SkinSetterServer.INSTANCE.get().setDefaultSkin(skinId);
         feedback.accept(LangContent.component(lang, "command.set_default", CustomPlaceholder.inline("skin_id", skinId)));
         return 1;
     }

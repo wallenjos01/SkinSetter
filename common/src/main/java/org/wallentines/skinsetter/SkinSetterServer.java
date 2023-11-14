@@ -30,7 +30,7 @@ public class SkinSetterServer {
     private final DataManager dataManager;
     private final Server server;
     private boolean persistence;
-    private SavedSkin defaultSkin;
+    private String defaultSkin;
 
     private SkinSetterServer(Server server, LangRegistry langDefaults) {
 
@@ -69,15 +69,31 @@ public class SkinSetterServer {
 
     public void setPersistenceEnabled(boolean enabled) {
         persistence = enabled;
+        saveConfig();
     }
 
     public SavedSkin getDefaultSkin() {
 
-        return defaultSkin;
+        return defaultSkin == null ? null : SkinSetterAPI.REGISTRY.get().getSkin(defaultSkin);
     }
 
-    public void setDefaultSkin(SavedSkin defaultSkin) {
+    public void setDefaultSkin(String defaultSkin) {
         this.defaultSkin = defaultSkin;
+        saveConfig();
+    }
+
+    public void saveConfig() {
+
+        ConfigObject obj = config.getRoot();
+        if(!(obj instanceof ConfigSection)) {
+            obj = new ConfigSection();
+            config.setRoot(obj);
+        }
+
+        obj.asSection().set("persistence", persistence);
+        obj.asSection().set("default_skin", defaultSkin);
+
+        config.save();
     }
 
     public void reload() {
@@ -91,7 +107,7 @@ public class SkinSetterServer {
         reg.loadAll();
 
         persistence = config.getRoot().asSection().getBoolean("persistence");
-        defaultSkin = config.getRoot().asSection().getOptional("default_skin", Serializer.STRING).map(reg::getSkin).orElse(null);
+        defaultSkin = config.getRoot().asSection().getOptional("default_skin", Serializer.STRING).orElse(null);
     }
 
     public void onJoin(Player player) {
@@ -103,8 +119,9 @@ public class SkinSetterServer {
 
         Skin skin = null;
 
-        if(defaultSkin != null) {
-            skin = defaultSkin.getSkin();
+        SavedSkin def = getDefaultSkin();
+        if(def != null) {
+            skin = def.getSkin();
         }
         if(persistence) {
             String id = player.getUUID().toString();
@@ -131,9 +148,7 @@ public class SkinSetterServer {
 
     public void onShutdown() {
 
-        SkinSetterAPI.REGISTRY.get().saveAll();
         SkinSetterAPI.REGISTRY.reset();
-
         INSTANCE.reset();
     }
 

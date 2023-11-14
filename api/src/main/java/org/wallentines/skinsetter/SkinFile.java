@@ -22,7 +22,6 @@ import java.util.*;
 public class SkinFile {
 
     private final FileWrapper<ConfigObject> file;
-    private boolean hasChanged;
     private final StringRegistry<RegisteredSkin> skins = new StringRegistry<>();
     private PropertyDefaults defaults = new PropertyDefaults();
 
@@ -37,7 +36,6 @@ public class SkinFile {
     public void load() {
 
         skins.clear();
-        hasChanged = false;
 
         file.load();
         if(!(file.getRoot() instanceof ConfigSection)) {
@@ -126,8 +124,6 @@ public class SkinFile {
 
     public void registerSkin(String id, SavedSkin skin) {
 
-        hasChanged = true;
-
         // Update existing skin if necessary
         RegisteredSkin rsk = skins.get(id);
         if(rsk != null) {
@@ -138,11 +134,7 @@ public class SkinFile {
 
         String finalId = defaults.applyId(id);
         skins.register(finalId, RegisteredSkin.create(id, finalId, defaults, skin.getSkin(), skin.getConfig()));
-    }
 
-    public void saveIfChanged() {
-
-        if(!hasChanged) return;
         save();
     }
 
@@ -158,8 +150,6 @@ public class SkinFile {
 
         file.setRoot(out);
         file.save();
-
-        hasChanged = false;
     }
 
     public int getSize() {

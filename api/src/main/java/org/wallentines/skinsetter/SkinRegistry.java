@@ -55,13 +55,6 @@ public class SkinRegistry {
         }
     }
 
-    public void saveAll() {
-
-        for(SkinFile sf : loadedFiles) {
-            sf.saveIfChanged();
-        }
-    }
-
     public void registerSkin(String name, SavedSkin skin) {
 
         registerSkin(name, skin, null);
