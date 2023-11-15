@@ -1,5 +1,6 @@
 package org.wallentines.skinsetter;
 
+import org.wallentines.mcore.GameVersion;
 import org.wallentines.mcore.ItemStack;
 import org.wallentines.mcore.Player;
 import org.wallentines.mcore.Skin;
@@ -11,10 +12,12 @@ import org.wallentines.mdcfg.serializer.SerializeResult;
 import org.wallentines.mdcfg.serializer.Serializer;
 
 import java.util.Set;
+import java.util.UUID;
 
 public class SavedSkin {
     private final Skin skin;
     private final SkinConfiguration config;
+    private ItemStack cachedItem;
 
     public SavedSkin(Skin skin, SkinConfiguration config) {
         this.skin = skin;
@@ -57,12 +60,23 @@ public class SavedSkin {
     }
 
     public ItemStack getDisplayItem() {
-        if(config.getDisplayItem() == null) {
+
+        if (cachedItem == null) {
+
+            if (config.getDisplayItem() != null) {
+                cachedItem = config.getDisplayItem();
+            } else {
             Component displayName = getDisplayName();
-            if(displayName == null) displayName = Component.empty();
-            return ItemStack.Builder.headWithSkin(skin).withName(displayName).build();
+            if (displayName == null) displayName = Component.empty();
+
+            Skin sk = skin;
+            if (GameVersion.CURRENT_VERSION.get().getProtocolVersion() < 738) {
+                sk = new Skin(UUID.nameUUIDFromBytes(skin.getValue().getBytes()), skin.getValue(), skin.getSignature());
+            }
+            cachedItem = ItemStack.Builder.headWithSkin(sk).withName(displayName).build();
+            }
         }
-        return config.getDisplayItem().copy();
+        return cachedItem.copy();
     }
 
 

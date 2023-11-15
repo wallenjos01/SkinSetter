@@ -1,9 +1,6 @@
 package org.wallentines.skinsetter;
 
-import org.wallentines.mcore.MidnightCoreAPI;
-import org.wallentines.mcore.Player;
-import org.wallentines.mcore.Server;
-import org.wallentines.mcore.Skin;
+import org.wallentines.mcore.*;
 import org.wallentines.mcore.data.DataManager;
 import org.wallentines.mcore.lang.LangManager;
 import org.wallentines.mcore.lang.LangRegistry;

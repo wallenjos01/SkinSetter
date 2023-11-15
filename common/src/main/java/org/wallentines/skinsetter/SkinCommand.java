@@ -13,10 +13,7 @@ import org.wallentines.mdcfg.ConfigPrimitive;
 import org.wallentines.mdcfg.serializer.ConfigContext;
 import org.wallentines.mdcfg.serializer.SerializeResult;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -247,8 +244,9 @@ public class SkinCommand {
             return 0;
         }
 
+        ItemStack is = skin.getDisplayItem();
         for(Player pl : targets) {
-            pl.giveItem(skin.getDisplayItem());
+            pl.giveItem(is);
         }
 
         sendMultiFeedback(targets, "command.item", feedback, CustomPlaceholder.inline("skin_id", skinName));
