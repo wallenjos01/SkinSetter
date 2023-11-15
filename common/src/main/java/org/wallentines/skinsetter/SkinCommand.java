@@ -2,7 +2,6 @@ package org.wallentines.skinsetter;
 
 import org.wallentines.mcore.*;
 import org.wallentines.mcore.lang.CustomPlaceholder;
-import org.wallentines.mcore.lang.LangContent;
 import org.wallentines.mcore.lang.LangManager;
 import org.wallentines.mcore.skin.Skinnable;
 import org.wallentines.mcore.text.Component;
@@ -29,7 +28,7 @@ public class SkinCommand {
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
         if(targets.isEmpty()) {
-            feedback.accept(LangContent.component(lang, "error.no_entities"));
+            feedback.accept(lang.component("error.no_entities"));
             return 0;
         }
 
@@ -37,7 +36,7 @@ public class SkinCommand {
         SavedSkin skin = reg.getSkin(skinId);
 
         if(skin != null && !forceOnline && skin.getPermission() != null && !permissionSupplier.apply(skin.getPermission(), 2)) {
-            feedback.accept(LangContent.component(lang, "error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
             return 0;
         }
 
@@ -48,7 +47,7 @@ public class SkinCommand {
                 MojangUtil.getSkinByNameAsync(skinId).thenAccept(downloaded -> {
 
                     if (downloaded == null) {
-                        feedback.accept(LangContent.component(lang, "error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+                        feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
                         return;
                     }
 
@@ -58,11 +57,11 @@ public class SkinCommand {
                     sendMultiFeedback(targets, "command.set", feedback, CustomPlaceholder.inline("skin_id", skinId));
                 });
 
-                feedback.accept(LangContent.component(lang, "command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)));
+                feedback.accept(lang.component("command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)));
                 return 2;
             }
 
-            feedback.accept(LangContent.component(lang, "error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
             return 0;
 
         } else {
@@ -81,7 +80,7 @@ public class SkinCommand {
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
         if (targets.isEmpty()) {
-            feedback.accept(LangContent.component(lang, "error.no_entities"));
+            feedback.accept(lang.component("error.no_entities"));
             return 0;
         }
 
@@ -89,17 +88,17 @@ public class SkinCommand {
         List<SavedSkin> sks = reg.getAllSkins(sender, null, SkinRegistry.ExcludeFlag.IN_GUI);
 
         if (reg.getSize() == 0) {
-            feedback.accept(LangContent.component(lang, "error.no_skins_found"));
+            feedback.accept(lang.component("error.no_skins_found"));
             return 0;
         }
 
         if (reg.getSize() <= 54) {
             // One-page GUI
             if (sks.isEmpty()) {
-                feedback.accept(LangContent.component(lang, "error.no_skins_found"));
+                feedback.accept(lang.component("error.no_skins_found"));
             }
 
-            InventoryGUI gui = InventoryGUI.FACTORY.get().build(LangContent.component(lang, "gui.title",
+            InventoryGUI gui = InventoryGUI.FACTORY.get().build(lang.component("gui.title",
                     CustomPlaceholder.inline("skins", sks.size())), 6);
             int index = 0;
             for (SavedSkin sk : sks) {
@@ -131,7 +130,7 @@ public class SkinCommand {
         }
 
         InventoryGUI gui = InventoryGUI.FACTORY.get().build(
-                LangContent.component(lang, "gui.title.paged",
+                lang.component("gui.title.paged",
                         CustomPlaceholder.inline("page", page + 1),
                         CustomPlaceholder.inline("pages", pages + 1),
                         CustomPlaceholder.inline("start_skin", (page * 45) + 1),
@@ -141,7 +140,7 @@ public class SkinCommand {
 
         if(page < pages) {
             ItemStack nextItem = ItemStack.Builder.glassPaneWithColor(TextColor.GREEN)
-                    .withName(ComponentResolver.resolveComponent(LangContent.component(lang, "gui.next_page"), sender))
+                    .withName(ComponentResolver.resolveComponent(lang.component("gui.next_page"), sender))
                     .build();
             gui.setItem(53, nextItem, (pl, ck) -> {
                 if(ck == InventoryGUI.ClickType.LEFT) {
@@ -151,7 +150,7 @@ public class SkinCommand {
         }
         if(page > 0) {
             ItemStack prevItem = ItemStack.Builder.glassPaneWithColor(TextColor.RED)
-                    .withName(ComponentResolver.resolveComponent(LangContent.component(lang, "gui.previous_page"), sender))
+                    .withName(ComponentResolver.resolveComponent(lang.component("gui.previous_page"), sender))
                     .build();
             gui.setItem(45, prevItem, (pl, ck) -> {
                 if(ck == InventoryGUI.ClickType.LEFT) {
@@ -178,7 +177,7 @@ public class SkinCommand {
 
         try {
             if (targets.isEmpty()) {
-                feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.no_entities"));
+                feedback.accept(SkinSetterServer.INSTANCE.get().getLangManager().component("error.no_entities"));
                 return 0;
             }
 
@@ -193,14 +192,14 @@ public class SkinCommand {
         return targets.size();
     }
 
-    public static int save(Skinnable target, String id, String file, BiFunction<String, Integer, Boolean> permissionSupplier, Consumer<Component> feedback) {
+    public static int save(Skinnable target, String id, String file, PermissionHolder holder, Consumer<Component> feedback) {
 
         try {
             SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
             LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
-            if (reg.getSkin(id) != null && !permissionSupplier.apply("skinsetter.command.save.overwrite", 4)) {
-                feedback.accept(LangContent.component(lang, "error.skin_exists", target, CustomPlaceholder.inline("skin_id", id)));
+            if (reg.getSkin(id) != null && !holder.hasPermission("skinsetter.command.save.overwrite", 4)) {
+                feedback.accept(lang.component("error.skin_exists", target, CustomPlaceholder.inline("skin_id", id)));
                 return 0;
             }
 
@@ -209,7 +208,7 @@ public class SkinCommand {
             SkinConfiguration config = new SkinConfiguration.Builder().build();
             reg.registerSkin(id, config.createSkin(skin), file);
 
-            feedback.accept(LangContent.component(lang, "command.save", target, CustomPlaceholder.inline("skin_id", id)));
+            feedback.accept(lang.component("command.save", target, CustomPlaceholder.inline("skin_id", id)));
         } catch (Throwable th) {
             SkinSetterAPI.LOGGER.error("An error occurred while saving a skin!", th);
         }
@@ -223,7 +222,7 @@ public class SkinCommand {
 
         List<SavedSkin> skins = reg.getAllSkins(permissionHolder, group, SkinRegistry.ExcludeFlag.IN_RANDOM);
         if(skins.isEmpty()) {
-            feedback.accept(LangContent.component(lang, "error.no_skins_found"));
+            feedback.accept(lang.component("error.no_skins_found"));
             return 0;
         }
 
@@ -244,7 +243,7 @@ public class SkinCommand {
         SavedSkin skin = reg.getSkin(skinName);
 
         if(skin == null || skin.getPermission() != null && !permissionHolder.hasPermission(skin.getPermission(), 2)) {
-            feedback.accept(LangContent.component(lang, "error.skin_not_found", CustomPlaceholder.inline("skin_id", skinName)));
+            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinName)));
             return 0;
         }
 
@@ -261,7 +260,7 @@ public class SkinCommand {
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
         SkinSetterServer.INSTANCE.get().setPersistenceEnabled(enabled);
 
-        feedback.accept(LangContent.component(lang, "command.persistence." + (enabled ? "enabled" : "disabled")));
+        feedback.accept(lang.component("command.persistence." + (enabled ? "enabled" : "disabled")));
         return 1;
     }
 
@@ -273,7 +272,7 @@ public class SkinCommand {
         if(sk == null) return 0;
 
         SkinSetterServer.INSTANCE.get().setDefaultSkin(skinId);
-        feedback.accept(LangContent.component(lang, "command.set_default", CustomPlaceholder.inline("skin_id", skinId)));
+        feedback.accept(lang.component("command.set_default", CustomPlaceholder.inline("skin_id", skinId)));
         return 1;
     }
 
@@ -282,7 +281,7 @@ public class SkinCommand {
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
         SkinSetterServer.INSTANCE.get().setDefaultSkin(null);
-        feedback.accept(LangContent.component(lang, "command.clear_default"));
+        feedback.accept(lang.component("command.clear_default"));
         return 1;
     }
 
@@ -296,7 +295,7 @@ public class SkinCommand {
 
         SerializeResult<Component> displayName = ConfigSerializer.INSTANCE.deserialize(ConfigContext.INSTANCE, new ConfigPrimitive(name));
         if(!displayName.isComplete()) {
-            feedback.accept(LangContent.component(lang, "error.parse_component", CustomPlaceholder.inline("error", displayName.getError())));
+            feedback.accept(lang.component("error.parse_component", CustomPlaceholder.inline("error", displayName.getError())));
             return 0;
         }
 
@@ -308,7 +307,7 @@ public class SkinCommand {
 
         reg.registerSkin(skinId, configuration.createSkin(sk.getSkin()));
 
-        feedback.accept(LangContent.component(lang, "command.edit.name", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.of("name", finalName)));
+        feedback.accept(lang.component("command.edit.name", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.of("name", finalName)));
         return 1;
     }
 
@@ -325,7 +324,7 @@ public class SkinCommand {
         SkinSetterAPI.REGISTRY.get().registerSkin(skinId, configuration.createSkin(sk.getSkin()));
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
-        feedback.accept(LangContent.component(lang, "command.edit.permission", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("permission", permission)));
+        feedback.accept(lang.component("command.edit.permission", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("permission", permission)));
 
         return 1;
     }
@@ -343,7 +342,7 @@ public class SkinCommand {
         SkinSetterAPI.REGISTRY.get().registerSkin(skinId, configuration.createSkin(sk.getSkin()));
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
-        feedback.accept(LangContent.component(lang, "command.edit.excludedInRandom", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("value", excludedInRandom)));
+        feedback.accept(lang.component("command.edit.excludedInRandom", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("value", excludedInRandom)));
 
         return 1;
     }
@@ -361,7 +360,7 @@ public class SkinCommand {
         SkinSetterAPI.REGISTRY.get().registerSkin(skinId, configuration.createSkin(sk.getSkin()));
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
-        feedback.accept(LangContent.component(lang, "command.edit.excludedInGUI", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("value", excludedInGUI)));
+        feedback.accept(lang.component("command.edit.excludedInGUI", CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("value", excludedInGUI)));
 
         return 1;
     }
@@ -379,7 +378,7 @@ public class SkinCommand {
         SkinSetterAPI.REGISTRY.get().registerSkin(skinId, configuration.createSkin(sk.getSkin()));
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
-        feedback.accept(LangContent.component(lang, "command.edit.item", CustomPlaceholder.inline("skin_id", skinId)));
+        feedback.accept(lang.component("command.edit.item", CustomPlaceholder.inline("skin_id", skinId)));
 
         return 1;
     }
@@ -393,7 +392,7 @@ public class SkinCommand {
 
         time = System.currentTimeMillis() - time;
 
-        feedback.accept(LangContent.component(lang, "command.reload", CustomPlaceholder.inline("elapsed", time)));
+        feedback.accept(lang.component("command.reload", CustomPlaceholder.inline("elapsed", time)));
 
         return 1;
     }
@@ -405,7 +404,7 @@ public class SkinCommand {
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         SavedSkin sk = reg.getSkin(skinId);
         if(sk == null) {
-            feedback.accept(LangContent.component(lang, "error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
             return null;
         }
 
@@ -419,10 +418,10 @@ public class SkinCommand {
 
         if(targets.size() == 1) {
             args.add(targets.iterator().next());
-            feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), key, args));
+            feedback.accept(SkinSetterServer.INSTANCE.get().getLangManager().componentWith(key, args));
         } else {
             args.add(CustomPlaceholder.inline("count", targets.size()));
-            feedback.accept(LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), key + ".multiple", args));
+            feedback.accept(SkinSetterServer.INSTANCE.get().getLangManager().componentWith(key + ".multiple", args));
         }
 
     }

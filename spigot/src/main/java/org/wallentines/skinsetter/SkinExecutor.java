@@ -10,7 +10,6 @@ import org.wallentines.mcore.Server;
 import org.wallentines.mcore.SpigotPlayer;
 import org.wallentines.mcore.adapter.Adapter;
 import org.wallentines.mcore.lang.CustomPlaceholder;
-import org.wallentines.mcore.lang.LangContent;
 import org.wallentines.mcore.text.Component;
 import org.wallentines.mcore.text.ComponentResolver;
 
@@ -47,7 +46,7 @@ public class SkinExecutor extends BukkitCommand {
 
         String sub = args[0];
         if(!sender.hasPermission("skinsetter.command." + sub)) {
-            sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.no_permission"));
+            sendMessage(sender, SkinSetterServer.INSTANCE.get().getLangManager().component("error.no_permission"));
             return true;
         }
 
@@ -83,14 +82,14 @@ public class SkinExecutor extends BukkitCommand {
             Server server = Server.RUNNING_SERVER.get();
             Player target = Bukkit.getPlayer(args[1]);
             if (target == null) {
-                sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.player_not_found"));
+                sendMessage(sender, SkinSetterServer.INSTANCE.get().getLangManager().component("error.player_not_found"));
                 return;
             }
 
             if (args.length == 2) {
 
                 if (!(sender instanceof Player)) {
-                    sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.not_player"));
+                    sendMessage(sender, SkinSetterServer.INSTANCE.get().getLangManager().component("error.not_player"));
                     return;
                 }
 
@@ -151,7 +150,7 @@ public class SkinExecutor extends BukkitCommand {
             file = args[3];
         }
 
-        SkinCommand.save(spl, skin, file, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+        SkinCommand.save(spl, skin, file, CommandPermissionHolder.of(sender), cmp -> sendMessage(sender, cmp));
     }
 
     private void setRandom(CommandSender sender, String[] args) {
@@ -280,7 +279,7 @@ public class SkinExecutor extends BukkitCommand {
     private void editItem(CommandSender sender, String[] args) {
 
         if(!(sender instanceof Player)) {
-            sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.not_player"));
+            sendMessage(sender, SkinSetterServer.INSTANCE.get().getLangManager().component("error.not_player"));
             return;
         }
 
@@ -373,14 +372,14 @@ public class SkinExecutor extends BukkitCommand {
         Server server = Server.RUNNING_SERVER.get();
         Player target = Bukkit.getPlayer(args[1]);
         if(target == null) {
-            sendMessage(sender, LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.player_not_found"));
+            sendMessage(sender, SkinSetterServer.INSTANCE.get().getLangManager().component("error.player_not_found"));
             return null;
         }
         return new SpigotPlayer(server, target);
     }
 
     private Component usage(String usage) {
-        return LangContent.component(SkinSetterServer.INSTANCE.get().getLangManager(), "error.usage", CustomPlaceholder.inline("usage", usage));
+        return SkinSetterServer.INSTANCE.get().getLangManager().component("error.usage", CustomPlaceholder.inline("usage", usage));
     }
 
     private void sendMessage(CommandSender sender, Component cmp) {

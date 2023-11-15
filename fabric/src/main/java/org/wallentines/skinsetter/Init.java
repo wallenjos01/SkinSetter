@@ -116,7 +116,7 @@ public class Init implements ModInitializer {
                                                             (Skinnable) ctx.getArgument("target", EntitySelector.class).findSingleEntity(ctx.getSource()),
                                                             ctx.getArgument("name", String.class),
                                                             null,
-                                                            (str, lvl) -> Permissions.check(ctx.getSource(), str, lvl),
+                                                            (PermissionHolder) ctx.getSource(),
                                                             comp -> sendSuccess(ctx.getSource(), comp)
                                                     ))
                                                     .then(Commands.argument("file", StringArgumentType.string())
@@ -124,7 +124,7 @@ public class Init implements ModInitializer {
                                                                     (Skinnable) ctx.getArgument("target", EntitySelector.class).findSingleEntity(ctx.getSource()),
                                                                     ctx.getArgument("name", String.class),
                                                                     ctx.getArgument("file", String.class),
-                                                                    (str, lvl) -> Permissions.check(ctx.getSource(), str, lvl),
+                                                                    (PermissionHolder) ctx.getSource(),
                                                                     comp -> sendSuccess(ctx.getSource(), comp)
                                                             ))
                                                     )
