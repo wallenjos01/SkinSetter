@@ -15,7 +15,6 @@ import org.wallentines.mcore.text.ComponentResolver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SkinExecutor extends BukkitCommand {
 
@@ -99,7 +98,8 @@ public class SkinExecutor extends BukkitCommand {
             }
 
             if (args.length == 3) {
-                SkinCommand.set(List.of(new SpigotPlayer(server, target)), args[2], false, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+                SpigotPlayer spl = new SpigotPlayer(server, target);
+                SkinCommand.set(List.of(spl), args[2], false, spl, cmp -> sendMessage(sender, cmp));
                 return;
             }
 
@@ -112,7 +112,8 @@ public class SkinExecutor extends BukkitCommand {
                     sendMessage(sender, usage(usage));
                     return;
                 }
-                SkinCommand.set(List.of(new SpigotPlayer(server, target)), args[2], true, (perm, lvl) -> sender.hasPermission(perm), cmp -> sendMessage(sender, cmp));
+                SpigotPlayer spl = new SpigotPlayer(server, target);
+                SkinCommand.set(List.of(spl), args[2], true, spl, cmp -> sendMessage(sender, cmp));
             }
         } catch (Exception ex) {
             SkinSetterAPI.LOGGER.error("An error occurred while settings a skin!", ex);
@@ -314,7 +315,7 @@ public class SkinExecutor extends BukkitCommand {
                     case "save":
                     case "setrandom":
                     case "item":
-                        out.addAll(Bukkit.getServer().getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()));
+                        out.addAll(Bukkit.getServer().getOnlinePlayers().stream().map(Player::getName).toList());
                         break;
                     case "persistence":
                         out.add("enable");
@@ -365,7 +366,7 @@ public class SkinExecutor extends BukkitCommand {
             }
         }
 
-        return out.stream().filter(str -> str.startsWith(args[args.length - 1])).collect(Collectors.toList());
+        return out.stream().filter(str -> str.startsWith(args[args.length - 1])).toList();
     }
 
     private SpigotPlayer getPlayer(CommandSender sender, String[] args) {

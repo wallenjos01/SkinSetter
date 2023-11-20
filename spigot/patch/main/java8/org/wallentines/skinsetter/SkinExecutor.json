@@ -4,5 +4,11 @@
     "type": "replace",
     "find": "List.of(",
     "replace": "java.util.Arrays.asList("
+  },
+  {
+    "lines": [ "all" ],
+    "type": "replace",
+    "find": ".toList()",
+    "replace": ".collect(java.util.stream.Collectors.toList())"
   }
 ]

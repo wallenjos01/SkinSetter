@@ -14,14 +14,13 @@ import org.wallentines.mdcfg.serializer.ConfigContext;
 import org.wallentines.mdcfg.serializer.SerializeResult;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class SkinCommand {
 
     private static final Random RANDOM = new Random();
 
-    public static int set(Collection<Skinnable> targets, String skinId, boolean forceOnline, BiFunction<String, Integer, Boolean> permissionSupplier, Consumer<Component> feedback) {
+    public static int set(Collection<Skinnable> targets, String skinId, boolean forceOnline, PermissionHolder permissionHolder, Consumer<Component> feedback) {
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
         if(targets.isEmpty()) {
@@ -32,34 +31,34 @@ public class SkinCommand {
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         SavedSkin skin = reg.getSkin(skinId);
 
-        if(skin != null && !forceOnline && skin.getPermission() != null && !permissionSupplier.apply(skin.getPermission(), 2)) {
+        if(skin != null && !forceOnline && !skin.canUse(permissionHolder)) {
             feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
             return 0;
         }
 
         if(skin == null || forceOnline) {
-            if(permissionSupplier.apply("skinsetter.command.set.online", 2)) {
 
-                // Online
-                MojangUtil.getSkinByNameAsync(skinId).thenAccept(downloaded -> {
-
-                    if (downloaded == null) {
-                        feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
-                        return;
-                    }
-
-                    for(Skinnable sk : targets) {
-                        sk.setSkin(downloaded);
-                    }
-                    sendMultiFeedback(targets, "command.set", feedback, CustomPlaceholder.inline("skin_id", skinId));
-                });
-
-                feedback.accept(lang.component("command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)));
-                return 2;
+            if(!permissionHolder.hasPermission("skinsetter.command.set.online", 4)) {
+                feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+                return 0;
             }
 
-            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
-            return 0;
+            // Online
+            MojangUtil.getSkinByNameAsync(skinId).thenAccept(downloaded -> {
+
+                if (downloaded == null) {
+                    feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+                    return;
+                }
+
+                for(Skinnable sk : targets) {
+                    sk.setSkin(downloaded);
+                }
+                sendMultiFeedback(targets, "command.set", feedback, CustomPlaceholder.inline("skin_id", skinId));
+            });
+
+            feedback.accept(lang.component("command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)));
+            return 2;
 
         } else {
 
@@ -239,7 +238,7 @@ public class SkinCommand {
 
         SavedSkin skin = reg.getSkin(skinName);
 
-        if(skin == null || skin.getPermission() != null && !permissionHolder.hasPermission(skin.getPermission(), 2)) {
+        if(skin == null || !skin.canUse(permissionHolder)) {
             feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinName)));
             return 0;
         }

@@ -4,13 +4,10 @@ import org.wallentines.mcore.*;
 import org.wallentines.mcore.data.DataManager;
 import org.wallentines.mcore.lang.LangManager;
 import org.wallentines.mcore.lang.LangRegistry;
-import org.wallentines.mcore.lang.PlaceholderManager;
 import org.wallentines.mcore.skin.SkinModule;
 import org.wallentines.mdcfg.ConfigObject;
 import org.wallentines.mdcfg.ConfigSection;
-import org.wallentines.mdcfg.codec.FileCodecRegistry;
 import org.wallentines.mdcfg.codec.FileWrapper;
-import org.wallentines.mdcfg.codec.JSONCodec;
 import org.wallentines.mdcfg.serializer.ConfigContext;
 import org.wallentines.mdcfg.serializer.Serializer;
 import org.wallentines.midnightlib.types.ResettableSingleton;
@@ -46,10 +43,7 @@ public class SkinSetterServer {
         config = MidnightCoreAPI.FILE_CODEC_REGISTRY.findOrCreate(ConfigContext.INSTANCE, "config", folder, DEFAULT_CONFIG);
         config.save();
 
-        FileCodecRegistry reg = new FileCodecRegistry();
-        reg.registerFileCodec(JSONCodec.fileCodec());
-
-        manager = new LangManager(langDefaults, folderPath.resolve("lang").toFile(), reg, PlaceholderManager.INSTANCE);
+        manager = new LangManager(langDefaults, folderPath.resolve("lang").toFile());
         manager.saveLanguageDefaults("en_us", langDefaults);
 
         SkinSetterAPI.REGISTRY.set(new SkinRegistry(folderPath.resolve("skins").toFile()));
@@ -130,7 +124,7 @@ public class SkinSetterServer {
         }
         if(persistence) {
             String id = player.getUUID().toString();
-            skin = dataManager.getData(id).get("skin", Skin.SERIALIZER);
+            skin = dataManager.getData(id).getOptional("skin", Skin.SERIALIZER).orElse(skin);
         }
 
         if(skin != null) {

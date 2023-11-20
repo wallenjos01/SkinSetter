@@ -1,9 +1,6 @@
 package org.wallentines.skinsetter;
 
-import org.wallentines.mcore.GameVersion;
-import org.wallentines.mcore.ItemStack;
-import org.wallentines.mcore.Player;
-import org.wallentines.mcore.Skin;
+import org.wallentines.mcore.*;
 import org.wallentines.mcore.text.Component;
 import org.wallentines.mcore.text.ConfigSerializer;
 import org.wallentines.mdcfg.serializer.ObjectSerializer;
@@ -54,7 +51,7 @@ public class SavedSkin {
         return excluded != null && excluded;
     }
 
-    public boolean canUse(Player player) {
+    public boolean canUse(PermissionHolder player) {
         String permission = config.getPermission();
         return permission == null || player.hasPermission(permission, 4);
     }

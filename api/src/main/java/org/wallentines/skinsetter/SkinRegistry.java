@@ -107,7 +107,7 @@ public class SkinRegistry {
     }
 
     private boolean matches(SavedSkin sk, PermissionHolder permissionHolder, String group, ExcludeFlag exclude) {
-        return (sk.getPermission() == null || permissionHolder.hasPermission(sk.getPermission(), 2))
+        return (sk.canUse(permissionHolder))
                 && !exclude.checker.test(sk)
                 && (group == null || sk.getGroups().contains(group));
     }
