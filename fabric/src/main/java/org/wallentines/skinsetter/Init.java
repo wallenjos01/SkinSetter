@@ -83,7 +83,7 @@ public class Init implements ModInitializer {
                                                             getTargets(ctx),
                                                             ctx.getArgument("skin", String.class),
                                                             false,
-                                                            (str, lvl) -> Permissions.check(ctx.getSource(), str, lvl),
+                                                            (PermissionHolder) ctx.getSource(),
                                                             comp -> sendSuccess(ctx.getSource(), comp)
                                                     ))
                                                     .then(Commands.literal("-o")
@@ -92,7 +92,7 @@ public class Init implements ModInitializer {
                                                                     getTargets(ctx),
                                                                     ctx.getArgument("skin", String.class),
                                                                     true,
-                                                                    (str, lvl) -> Permissions.check(ctx.getSource(), str, lvl),
+                                                                    (PermissionHolder) ctx.getSource(),
                                                                     comp -> sendSuccess(ctx.getSource(), comp)
                                                             ))
                                                     )
