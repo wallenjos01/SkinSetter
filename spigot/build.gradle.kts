@@ -76,7 +76,7 @@ dependencies {
     compileOnly(libs.midnight.cfg.json)
     compileOnly(libs.midnight.cfg.binary)
 
-    compileOnly("org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
     compileOnly(libs.jetbrains.annotations)
 
 }

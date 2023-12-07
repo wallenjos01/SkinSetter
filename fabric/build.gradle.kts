@@ -64,14 +64,14 @@ dependencies {
     shadow(project(":common").setTransitive(false))
 
     // Minecraft
-    minecraft("com.mojang:minecraft:1.20.3")
+    minecraft("com.mojang:minecraft:1.20.4")
     mappings(loom.officialMojangMappings())
 
     // Fabric Loader
     modImplementation("net.fabricmc:fabric-loader:0.15.0")
 
     // Fabric API
-    modApi(fabricApi.module("fabric-command-api-v2", "0.91.1+1.20.3"))
+    modApi(fabricApi.module("fabric-command-api-v2", "0.91.1+1.20.4"))
 
     // MidnightCore
     modApi(libs.midnight.core.fabric)
