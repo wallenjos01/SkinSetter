@@ -27,8 +27,8 @@
   "command.edit.excludedInGUI": "&aSkin &f%skin_id% &aGUI exclusion changed to &f%value%",
   "command.edit.item": "&aSkin &f%skin_id% &aitem updated",
   "command.reload": "&aSkinSetter reloaded in &f%elapsed%ms",
-  "gui.title": "Choose a Skin (%skins%)",
-  "gui.title.paged": "Choose a Skin - Page %page%/%pages% (%start_skin%-%end_skin%/%skins%)",
+  "gui.title": "Skins (%skins%)",
+  "gui.title.paged": "Skins - Page %page%/%pages% (%start_skin%-%end_skin%/%skins%)",
   "gui.next_page": "&aNext Page",
   "gui.previous_page": "&cPrevious Page"
 }

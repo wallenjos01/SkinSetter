@@ -116,10 +116,12 @@ public class SkinCommand {
         }
     }
 
-    private static void openPagedGUI(List<SavedSkin> sks, int page, LangManager lang, Player sender, Collection<Skinnable> target) {
+    private static void openPagedGUI(List<SavedSkin> skins, int page, LangManager lang, Player sender, Collection<Skinnable> target) {
 
-        int skins = sks.size();
-        int pages = (skins / 45) + (skins % 45 == 0 ? 0 : 1);
+        int skinCount = skins.size();
+        int pages = (skinCount / 45) + (skinCount % 45 == 0 ? 0 : 1);
+        int offset = page * 45;
+        int max = Math.min(45, skins.size() - offset);
         if(page > pages || page < 0) {
             InventoryGUI.closeMenu(sender);
             return;
@@ -128,10 +130,10 @@ public class SkinCommand {
         InventoryGUI gui = InventoryGUI.FACTORY.get().build(
                 lang.component("gui.title.paged",
                         CustomPlaceholder.inline("page", page + 1),
-                        CustomPlaceholder.inline("pages", pages + 1),
-                        CustomPlaceholder.inline("start_skin", (page * 45) + 1),
-                        CustomPlaceholder.inline("end_skin", (page * 45) + 45),
-                        CustomPlaceholder.inline("skins", skins)),
+                        CustomPlaceholder.inline("pages", pages),
+                        CustomPlaceholder.inline("start_skin", offset + 1),
+                        CustomPlaceholder.inline("end_skin", max),
+                        CustomPlaceholder.inline("skins", skinCount)),
                 6);
 
         if(page < pages) {
@@ -140,7 +142,7 @@ public class SkinCommand {
                     .build();
             gui.setItem(53, nextItem, (pl, ck) -> {
                 if(ck == InventoryGUI.ClickType.LEFT) {
-                    openPagedGUI(sks, page + 1, lang, sender, target);
+                    openPagedGUI(skins, page + 1, lang, sender, target);
                 }
             });
         }
@@ -150,13 +152,13 @@ public class SkinCommand {
                     .build();
             gui.setItem(45, prevItem, (pl, ck) -> {
                 if(ck == InventoryGUI.ClickType.LEFT) {
-                    openPagedGUI(sks, page - 1, lang, sender, target);
+                    openPagedGUI(skins, page - 1, lang, sender, target);
                 }
             });
         }
 
-        for(int i = 0 ; i < 45 ; i++) {
-            SavedSkin sk = sks.get(i + (page * 45));
+        for(int i = 0 ; i < max ; i++) {
+            SavedSkin sk = skins.get(i + (page * 45));
             gui.setItem(i, sk.getDisplayItem(), (pl, ct) -> {
                 if(ct == InventoryGUI.ClickType.LEFT) {
                     for(Skinnable skb : target) {
@@ -168,6 +170,7 @@ public class SkinCommand {
 
         gui.open(sender);
     }
+
 
     public static int reset(Collection<Skinnable> targets, Consumer<Component> feedback) {
 
