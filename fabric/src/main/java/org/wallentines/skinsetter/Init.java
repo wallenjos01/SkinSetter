@@ -6,7 +6,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -14,10 +13,8 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.selector.EntitySelector;
 import org.wallentines.fbev.player.PlayerJoinEvent;
 import org.wallentines.fbev.player.PlayerLeaveEvent;
-import org.wallentines.mcore.MidnightCoreAPI;
-import org.wallentines.mcore.PermissionHolder;
-import org.wallentines.mcore.Player;
-import org.wallentines.mcore.Server;
+import org.wallentines.fbev.server.CommandLoadEvent;
+import org.wallentines.mcore.*;
 import org.wallentines.mcore.lang.LangRegistry;
 import org.wallentines.mcore.lang.PlaceholderManager;
 import org.wallentines.mcore.skin.Skinnable;
@@ -59,9 +56,9 @@ public class Init implements ModInitializer {
             SkinSetterServer.INSTANCE.get().onLeave((Player) ev.getPlayer());
         });
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated, selection) -> {
+        Event.register(CommandLoadEvent.class, this, ev -> {
 
-            dispatcher.register(
+            ev.dispatcher().register(
                     Commands.literal("skin")
                             .requires(Permissions.require("skinsetter.command", 2))
                             .then(Commands.literal("set")
@@ -75,7 +72,7 @@ public class Init implements ModInitializer {
                                             .then(Commands.argument("skin", StringArgumentType.string())
                                                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
                                                             SkinSetterAPI.REGISTRY.get().getSkinIds(
-                                                                    (PermissionHolder) ctx.getSource(),
+                                                                    (CommandSender) ctx.getSource(),
                                                                     null,
                                                                     SkinRegistry.ExcludeFlag.NONE),
                                                             builder))
@@ -83,8 +80,7 @@ public class Init implements ModInitializer {
                                                             getTargets(ctx),
                                                             ctx.getArgument("skin", String.class),
                                                             false,
-                                                            (PermissionHolder) ctx.getSource(),
-                                                            comp -> sendSuccess(ctx.getSource(), comp)
+                                                            (CommandSender) ctx.getSource()
                                                     ))
                                                     .then(Commands.literal("-o")
                                                             .requires(Permissions.require("skinsetter.command.set.online", 2))
@@ -92,8 +88,7 @@ public class Init implements ModInitializer {
                                                                     getTargets(ctx),
                                                                     ctx.getArgument("skin", String.class),
                                                                     true,
-                                                                    (PermissionHolder) ctx.getSource(),
-                                                                    comp -> sendSuccess(ctx.getSource(), comp)
+                                                                    (CommandSender) ctx.getSource()
                                                             ))
                                                     )
                                             )
@@ -104,7 +99,7 @@ public class Init implements ModInitializer {
                                     .then(Commands.argument("targets", EntityArgument.entities())
                                             .executes(ctx -> SkinCommand.reset(
                                                     getTargets(ctx),
-                                                    comp -> sendSuccess(ctx.getSource(), comp)
+                                                    (CommandSender) ctx.getSource()
                                             ))
                                     )
                             )
@@ -116,16 +111,14 @@ public class Init implements ModInitializer {
                                                             (Skinnable) ctx.getArgument("target", EntitySelector.class).findSingleEntity(ctx.getSource()),
                                                             ctx.getArgument("name", String.class),
                                                             null,
-                                                            (PermissionHolder) ctx.getSource(),
-                                                            comp -> sendSuccess(ctx.getSource(), comp)
+                                                            (CommandSender) ctx.getSource()
                                                     ))
                                                     .then(Commands.argument("file", StringArgumentType.string())
                                                             .executes(ctx -> SkinCommand.save(
                                                                     (Skinnable) ctx.getArgument("target", EntitySelector.class).findSingleEntity(ctx.getSource()),
                                                                     ctx.getArgument("name", String.class),
                                                                     ctx.getArgument("file", String.class),
-                                                                    (PermissionHolder) ctx.getSource(),
-                                                                    comp -> sendSuccess(ctx.getSource(), comp)
+                                                                    (CommandSender) ctx.getSource()
                                                             ))
                                                     )
                                             )
@@ -136,9 +129,8 @@ public class Init implements ModInitializer {
                                     .then(Commands.argument("targets", EntityArgument.entities())
                                             .executes(ctx -> SkinCommand.setRandom(
                                                     getTargets(ctx),
-                                                    (PermissionHolder) ctx.getSource(),
-                                                    null,
-                                                    comp -> sendSuccess(ctx.getSource(), comp)
+                                                    (CommandSender) ctx.getSource(),
+                                                    null
                                             ))
                                             .then(Commands.argument("group", StringArgumentType.string())
                                                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -148,9 +140,8 @@ public class Init implements ModInitializer {
                                                             builder))
                                                     .executes(ctx -> SkinCommand.setRandom(
                                                             getTargets(ctx),
-                                                            (PermissionHolder) ctx.getSource(),
-                                                            ctx.getArgument("group", String.class),
-                                                            comp -> sendSuccess(ctx.getSource(), comp)
+                                                            (CommandSender) ctx.getSource(),
+                                                            ctx.getArgument("group", String.class)
                                                     ))
                                             )
                                     )
@@ -163,8 +154,7 @@ public class Init implements ModInitializer {
                                                     .executes(ctx -> SkinCommand.item(
                                                             ctx.getArgument("targets", EntitySelector.class).findEntities(ctx.getSource()).stream().filter(en -> en instanceof Player).map(en -> (Player) en).collect(Collectors.toList()),
                                                             ctx.getArgument("skin", String.class),
-                                                            (PermissionHolder) ctx.getSource(),
-                                                            comp -> sendSuccess(ctx.getSource(), comp)
+                                                            (CommandSender) ctx.getSource()
                                                     ))
                                             )
                                     )

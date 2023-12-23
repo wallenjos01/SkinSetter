@@ -68,10 +68,7 @@ dependencies {
     mappings(loom.officialMojangMappings())
 
     // Fabric Loader
-    modImplementation("net.fabricmc:fabric-loader:0.15.0")
-
-    // Fabric API
-    modApi(fabricApi.module("fabric-command-api-v2", "0.91.1+1.20.4"))
+    modImplementation("net.fabricmc:fabric-loader:0.15.1")
 
     // MidnightCore
     modApi(libs.midnight.core.fabric)

@@ -20,26 +20,26 @@ public class SkinCommand {
 
     private static final Random RANDOM = new Random();
 
-    public static int set(Collection<Skinnable> targets, String skinId, boolean forceOnline, PermissionHolder permissionHolder, Consumer<Component> feedback) {
+    public static int set(Collection<Skinnable> targets, String skinId, boolean forceOnline, CommandSender sender) {
 
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
         if(targets.isEmpty()) {
-            feedback.accept(lang.component("error.no_entities"));
+            sender.sendFailure(lang.component("error.no_entities"));
             return 0;
         }
 
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         SavedSkin skin = reg.getSkin(skinId);
 
-        if(skin != null && !forceOnline && !skin.canUse(permissionHolder)) {
-            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+        if(skin != null && !forceOnline && !skin.canUse(sender)) {
+            sender.sendFailure(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
             return 0;
         }
 
         if(skin == null || forceOnline) {
 
-            if(!permissionHolder.hasPermission("skinsetter.command.set.online", 4)) {
-                feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+            if(!sender.hasPermission("skinsetter.command.set.online", 4)) {
+                sender.sendFailure(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
                 return 0;
             }
 
@@ -47,17 +47,17 @@ public class SkinCommand {
             MojangUtil.getSkinByNameAsync(skinId).thenAccept(downloaded -> {
 
                 if (downloaded == null) {
-                    feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
+                    sender.sendFailure(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinId)));
                     return;
                 }
 
                 for(Skinnable sk : targets) {
                     sk.setSkin(downloaded);
                 }
-                sendMultiFeedback(targets, "command.set", feedback, CustomPlaceholder.inline("skin_id", skinId));
+                sendMultiFeedback(targets, "command.set", sender, CustomPlaceholder.inline("skin_id", skinId));
             });
 
-            feedback.accept(lang.component("command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)));
+            sender.sendSuccess(lang.component("command.set.online", targets, CustomPlaceholder.inline("skin_id", skinId), CustomPlaceholder.inline("name", skinId)), false);
             return 2;
 
         } else {
@@ -65,7 +65,7 @@ public class SkinCommand {
             for(Skinnable sk : targets) {
                 sk.setSkin(skin.getSkin());
             }
-            sendMultiFeedback(targets, "command.set", feedback, CustomPlaceholder.inline("skin_id", skinId));
+            sendMultiFeedback(targets, "command.set", sender, CustomPlaceholder.inline("skin_id", skinId));
             return targets.size();
         }
 
@@ -172,11 +172,11 @@ public class SkinCommand {
     }
 
 
-    public static int reset(Collection<Skinnable> targets, Consumer<Component> feedback) {
+    public static int reset(Collection<Skinnable> targets, CommandSender sender) {
 
         try {
             if (targets.isEmpty()) {
-                feedback.accept(SkinSetterServer.INSTANCE.get().getLangManager().component("error.no_entities"));
+                sender.sendFailure(SkinSetterServer.INSTANCE.get().getLangManager().component("error.no_entities"));
                 return 0;
             }
 
@@ -184,21 +184,21 @@ public class SkinCommand {
                 skb.resetSkin();
             }
 
-            sendMultiFeedback(targets, "command.reset", feedback, null);
+            sendMultiFeedback(targets, "command.reset", sender, null);
         } catch (Throwable th) {
             SkinSetterAPI.LOGGER.error("An error occurred while resetting a skin!", th);
         }
         return targets.size();
     }
 
-    public static int save(Skinnable target, String id, String file, PermissionHolder holder, Consumer<Component> feedback) {
+    public static int save(Skinnable target, String id, String file, CommandSender sender) {
 
         try {
             SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
             LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
-            if (reg.getSkin(id) != null && !holder.hasPermission("skinsetter.command.save.overwrite", 4)) {
-                feedback.accept(lang.component("error.skin_exists", target, CustomPlaceholder.inline("skin_id", id)));
+            if (reg.getSkin(id) != null && !sender.hasPermission("skinsetter.command.save.overwrite", 4)) {
+                sender.sendFailure(lang.component("error.skin_exists", target, CustomPlaceholder.inline("skin_id", id)));
                 return 0;
             }
 
@@ -207,21 +207,21 @@ public class SkinCommand {
             SkinConfiguration config = new SkinConfiguration.Builder().build();
             reg.registerSkin(id, config.createSkin(skin), file);
 
-            feedback.accept(lang.component("command.save", target, CustomPlaceholder.inline("skin_id", id)));
+            sender.sendSuccess(lang.component("command.save", target, CustomPlaceholder.inline("skin_id", id)), false);
         } catch (Throwable th) {
             SkinSetterAPI.LOGGER.error("An error occurred while saving a skin!", th);
         }
         return 1;
     }
 
-    public static int setRandom(Collection<Skinnable> targets, PermissionHolder permissionHolder, String group, Consumer<Component> feedback) {
+    public static int setRandom(Collection<Skinnable> targets, CommandSender sender, String group) {
 
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
-        List<SavedSkin> skins = reg.getAllSkins(permissionHolder, group, SkinRegistry.ExcludeFlag.IN_RANDOM);
+        List<SavedSkin> skins = reg.getAllSkins(sender, group, SkinRegistry.ExcludeFlag.IN_RANDOM);
         if(skins.isEmpty()) {
-            feedback.accept(lang.component("error.no_skins_found"));
+            sender.sendFailure(lang.component("error.no_skins_found"));
             return 0;
         }
 
@@ -230,19 +230,19 @@ public class SkinCommand {
             target.setSkin(sk.getSkin());
         }
 
-        sendMultiFeedback(targets, "command.setrandom", feedback, null);
+        sendMultiFeedback(targets, "command.setrandom", sender, null);
         return targets.size();
     }
 
-    public static int item(Collection<Player> targets, String skinName, PermissionHolder permissionHolder, Consumer<Component> feedback) {
+    public static int item(Collection<Player> targets, String skinName, CommandSender sender) {
 
         SkinRegistry reg = SkinSetterAPI.REGISTRY.get();
         LangManager lang = SkinSetterServer.INSTANCE.get().getLangManager();
 
         SavedSkin skin = reg.getSkin(skinName);
 
-        if(skin == null || !skin.canUse(permissionHolder)) {
-            feedback.accept(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinName)));
+        if(skin == null || !skin.canUse(sender)) {
+            sender.sendFailure(lang.component("error.skin_not_found", CustomPlaceholder.inline("skin_id", skinName)));
             return 0;
         }
 
@@ -251,7 +251,7 @@ public class SkinCommand {
             pl.giveItem(is);
         }
 
-        sendMultiFeedback(targets, "command.item", feedback, CustomPlaceholder.inline("skin_id", skinName));
+        sendMultiFeedback(targets, "command.item", sender, CustomPlaceholder.inline("skin_id", skinName));
         return targets.size();
     }
 
@@ -411,17 +411,17 @@ public class SkinCommand {
         return sk;
     }
 
-    private static void sendMultiFeedback(Collection<?> targets, String key, Consumer<Component> feedback, Object arg) {
+    private static void sendMultiFeedback(Collection<?> targets, String key, CommandSender sender, Object arg) {
 
         List<Object> args = new ArrayList<>();
         if(arg != null) args.add(arg);
 
         if(targets.size() == 1) {
             args.add(targets.iterator().next());
-            feedback.accept(SkinSetterServer.INSTANCE.get().getLangManager().componentWith(key, args));
+            sender.sendSuccess(SkinSetterServer.INSTANCE.get().getLangManager().componentWith(key, args), true);
         } else {
             args.add(CustomPlaceholder.inline("count", targets.size()));
-            feedback.accept(SkinSetterServer.INSTANCE.get().getLangManager().componentWith(key + ".multiple", args));
+            sender.sendSuccess(SkinSetterServer.INSTANCE.get().getLangManager().componentWith(key + ".multiple", args), true);
         }
 
     }

@@ -5,7 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.wallentines.mcore.CommandPermissionHolder;
+import org.wallentines.mcore.SpigotCommandSender;
 import org.wallentines.mcore.Server;
 import org.wallentines.mcore.SpigotPlayer;
 import org.wallentines.mcore.adapter.Adapter;
@@ -99,7 +99,7 @@ public class SkinExecutor extends BukkitCommand {
 
             if (args.length == 3) {
                 SpigotPlayer spl = new SpigotPlayer(server, target);
-                SkinCommand.set(List.of(spl), args[2], false, spl, cmp -> sendMessage(sender, cmp));
+                SkinCommand.set(List.of(spl), args[2], false, SpigotCommandSender.of(sender));
                 return;
             }
 
@@ -113,7 +113,7 @@ public class SkinExecutor extends BukkitCommand {
                     return;
                 }
                 SpigotPlayer spl = new SpigotPlayer(server, target);
-                SkinCommand.set(List.of(spl), args[2], true, spl, cmp -> sendMessage(sender, cmp));
+                SkinCommand.set(List.of(spl), args[2], true, SpigotCommandSender.of(sender));
             }
         } catch (Exception ex) {
             SkinSetterAPI.LOGGER.error("An error occurred while settings a skin!", ex);
@@ -131,7 +131,7 @@ public class SkinExecutor extends BukkitCommand {
         SpigotPlayer spl = getPlayer(sender, args);
         if(spl == null) return;
 
-        SkinCommand.reset(List.of(spl), cmp -> sendMessage(sender, cmp));
+        SkinCommand.reset(List.of(spl), SpigotCommandSender.of(sender));
     }
 
     private void save(CommandSender sender, String[] args) {
@@ -151,7 +151,7 @@ public class SkinExecutor extends BukkitCommand {
             file = args[3];
         }
 
-        SkinCommand.save(spl, skin, file, CommandPermissionHolder.of(sender), cmp -> sendMessage(sender, cmp));
+        SkinCommand.save(spl, skin, file, SpigotCommandSender.of(sender));
     }
 
     private void setRandom(CommandSender sender, String[] args) {
@@ -169,7 +169,7 @@ public class SkinExecutor extends BukkitCommand {
         SpigotPlayer spl = getPlayer(sender, args);
         if(spl == null) return;
 
-        SkinCommand.setRandom(List.of(spl), CommandPermissionHolder.of(sender), group, cmp -> sendMessage(sender, cmp));
+        SkinCommand.setRandom(List.of(spl), SpigotCommandSender.of(sender), group);
     }
 
     private void item(CommandSender sender, String[] args) {
@@ -183,7 +183,7 @@ public class SkinExecutor extends BukkitCommand {
         if(spl == null) return;
 
         String skin = args[2];
-        SkinCommand.item(List.of(spl), skin, CommandPermissionHolder.of(sender), cmp -> sendMessage(sender, cmp));
+        SkinCommand.item(List.of(spl), skin, SpigotCommandSender.of(sender));
     }
 
     private void persistence(CommandSender sender, String[] args) {
@@ -289,7 +289,7 @@ public class SkinExecutor extends BukkitCommand {
     }
 
 
-    private void addSkinNames(CommandPermissionHolder sender, List<String> list) {
+    private void addSkinNames(SpigotCommandSender sender, List<String> list) {
         list.addAll(SkinSetterAPI.REGISTRY.get().getSkinIds(sender, null, SkinRegistry.ExcludeFlag.NONE));
     }
 
@@ -297,7 +297,7 @@ public class SkinExecutor extends BukkitCommand {
     @Override
     public List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, @NotNull String[] args) throws IllegalArgumentException {
 
-        CommandPermissionHolder cph = CommandPermissionHolder.of(sender);
+        SpigotCommandSender cph = SpigotCommandSender.of(sender);
 
         List<String> out = new ArrayList<>();
         if(args.length == 0 || args.length == 1) {
